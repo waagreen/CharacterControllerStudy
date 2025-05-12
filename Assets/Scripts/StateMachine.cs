@@ -12,9 +12,13 @@ public enum Verb
 
 public class StateMachine : MonoBehaviour
 {
-    [SerializeField] Verb initalState;
+    [SerializeField] private Verb initalState;
+    [SerializeField] private Character character;
+    [SerializeField] private InputManager inputManager;
 
-    private Character character = null;
+    public Character Character => character;
+    public InputManager InputManager => inputManager;
+
     private State currentState = null;
     private readonly Dictionary<Verb, State> aviableStates = new();
 
@@ -30,10 +34,10 @@ public class StateMachine : MonoBehaviour
     {
         return verb switch
         {
-            Verb.Idling => new Idle(),
-            Verb.Moving => new Move(),
-            Verb.Jumping => new Jump(),
-            Verb.Grabing => new Grab(),
+            Verb.Idling => new Idle(this),
+            Verb.Moving => new Move(this),
+            Verb.Jumping => new Jump(this),
+            Verb.Grabing => new Grab(this),
             _ => throw new NotImplementedException(),
         };
     }

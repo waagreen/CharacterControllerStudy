@@ -2,9 +2,14 @@ using UnityEngine;
 
 public class Jump : State
 {
+    public Jump(StateMachine machine) : base(machine)
+    {
+    }
+
     public override void Behaviour()
     {
-        throw new System.NotImplementedException();
+        Vector2 upwardsVelocity = Vector2.up * character.JumpForce;
+        character.Rigidbody.AddForce(upwardsVelocity, ForceMode.Impulse);
     }
 
     public override void CheckTransition()

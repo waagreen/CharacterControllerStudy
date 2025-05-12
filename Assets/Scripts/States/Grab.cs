@@ -2,6 +2,10 @@ using UnityEngine;
 
 public class Grab : State
 {
+    public Grab(StateMachine machine) : base(machine)
+    {
+    }
+
     public override void Behaviour()
     {
         throw new System.NotImplementedException();

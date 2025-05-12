@@ -2,23 +2,29 @@ using UnityEngine;
 
 public class Idle : State
 {
+    public Idle(StateMachine machine) : base(machine)
+    {
+    }
+
     public override void Behaviour()
     {
-        throw new System.NotImplementedException();
     }
 
     public override void CheckTransition()
     {
-        throw new System.NotImplementedException();
+        if (input.Movement != Vector2.zero)
+        {
+            parentMachine.ChangeState(Verb.Moving);
+        }
     }
 
     public override void Enter()
     {
-        throw new System.NotImplementedException();
+        Debug.Log("ENTERING IDLE");
     }
 
     public override void Exit()
     {
-        throw new System.NotImplementedException();
+        Debug.Log("EXITING IDLE");
     }
 }
