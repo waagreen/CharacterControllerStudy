@@ -58,6 +58,8 @@ public class StateMachine : MonoBehaviour
     {
         CreateStates();
         character = GetComponent<Character>();
+        
+        inputManager.CreateInputMap();
     }
 
     private void FixedUpdate()

@@ -18,13 +18,21 @@ public class Idle : State
         }
     }
 
+    private void GoToJump()
+    {
+        Debug.Log(character.IsGrounded());
+        if (!character.IsGrounded()) return;
+
+        parentMachine.ChangeState(Verb.Jumping);
+    }
+
     public override void Enter()
     {
-        Debug.Log("ENTERING IDLE");
+        input.OnJump += GoToJump;
     }
 
     public override void Exit()
     {
-        Debug.Log("EXITING IDLE");
+        input.OnJump -= GoToJump;
     }
 }

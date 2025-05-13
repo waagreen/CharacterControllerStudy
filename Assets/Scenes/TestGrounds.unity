@@ -163,7 +163,7 @@ GameObject:
   - component: {fileID: 49039013}
   - component: {fileID: 49039012}
   - component: {fileID: 49039011}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Ground
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -604,7 +604,7 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 64
+  m_Constraints: 112
   m_CollisionDetection: 0
 --- !u!4 &1540084358
 Transform:
@@ -647,8 +647,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e3b35d2ca639ca84eaa4d02b23b7a545, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 50
+  speed: 12
   jumpForce: 10
+  acceleration: 8
+  deceleration: 20
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 64
+  hurtLayer:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!114 &1540084361
 MonoBehaviour:
   m_ObjectHideFlags: 0
