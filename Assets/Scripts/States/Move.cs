@@ -2,51 +2,63 @@ using UnityEngine;
 
 public class Move : State
 {
-    private Vector3 velocity = Vector3.zero;
 
     public Move(StateMachine machine) : base(machine)
     {
     }
 
-    public override void Behaviour()
+    private void HandleRotation()
     {
-        // Make a vector using y as forward instead of up
-        Vector3 direction = new(input.Movement.x, 0f, input.Movement.y); 
+        Vector3 normalizedMovement = input.Movement.normalized;
+        float targetAngle = Mathf.Atan2(normalizedMovement.x, normalizedMovement.y) * Mathf.Rad2Deg;
+        Quaternion targetRotation = Quaternion.Euler(0f, targetAngle, 0f);
+        Quaternion interpolatedRotation = Quaternion.Slerp
+        (
+            character.transform.rotation,
+            targetRotation,
+            character.RotationSpeed * Time.deltaTime
+        );
         
-        // Linear interpolate between idle and moving based on input magnitute
-        Vector3 lerpedDirection = Vector3.Lerp(Vector3.zero, direction.normalized * character.Speed, input.Movement.magnitude);
-        
-        // Acceleration and deceleration are interpolated so we can have different values for them
-        float rateOfChange = Mathf.Lerp(character.Deceleration, character.Acceleration, direction.magnitude);
-     
-        // Finally directly modify the character velocity interpolating with the previous velocity
-        velocity = Vector3.Lerp(character.Rigidbody.linearVelocity, lerpedDirection, rateOfChange * Time.deltaTime);
-        character.Rigidbody.linearVelocity = velocity;
+        character.transform.rotation = interpolatedRotation;
+    }
+
+    private void HandleMovement()
+    {
+        Vector3 direction = new(input.Movement.x, 0f, input.Movement.y);
+
+        if (direction.magnitude > 1f) direction.Normalize();
+
+        // Calculate desired movement force
+        Vector3 desiredVelocity = direction * character.Speed;
+        Vector3 currentVelocity = character.Rigidbody.linearVelocity;
+        currentVelocity.y = 0;
+
+        Vector3 velocityChange = desiredVelocity - currentVelocity;
+        velocityChange = Vector3.ClampMagnitude(velocityChange, character.Acceleration * Time.deltaTime);
+
+        character.Rigidbody.AddForce(velocityChange, ForceMode.VelocityChange);
+
+        // Optional speed clamping
+        Vector3 horizontalVel = character.Rigidbody.linearVelocity;
+        horizontalVel.y = 0f;
+        if (horizontalVel.magnitude > character.MaxSpeed)
+        {
+            horizontalVel = horizontalVel.normalized * character.MaxSpeed;
+            character.Rigidbody.linearVelocity = new Vector3(horizontalVel.x, character.Rigidbody.linearVelocity.y, horizontalVel.z);
+        }
+    }
+
+    public override void ConstantBehaviour()
+    {
+        HandleMovement();
+        HandleRotation();
     }
 
     public override void CheckTransition()
     {
-        if ((input.Movement == Vector2.zero) && (velocity == Vector3.zero))
+        if ((input.Movement == Vector2.zero) && (character.Rigidbody.linearVelocity == Vector3.zero))
         {
-            parentMachine.ChangeState(Verb.Idling);
+            parentMachine.ChangeSubState(Verb.Idling);
         }
-    }
-
-    private void GoToJump()
-    {
-        Debug.Log(character.IsGrounded());
-        if (!character.IsGrounded()) return;
-
-        parentMachine.ChangeState(Verb.Jumping);
-    }
-
-    public override void Enter()
-    {
-        input.OnJump += GoToJump;
-    }
-
-    public override void Exit()
-    {
-        input.OnJump -= GoToJump;
     }
 }

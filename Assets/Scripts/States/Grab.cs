@@ -6,7 +6,7 @@ public class Grab : State
     {
     }
 
-    public override void Behaviour()
+    public override void ConstantBehaviour()
     {
     }
 

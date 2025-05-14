@@ -6,7 +6,6 @@ public abstract class State
     protected InputManager input;
     protected Character character;
 
-
     public State(StateMachine machine)
     {
         parentMachine = machine;
@@ -14,8 +13,8 @@ public abstract class State
         character = parentMachine.Character;
     }
 
-    public abstract void Behaviour();
-    public abstract void Enter();
-    public abstract void Exit();
-    public abstract void CheckTransition();
+    public virtual void ConstantBehaviour() {}
+    public virtual void Enter() {}
+    public virtual void Exit() {}
+    public virtual void CheckTransition() {}
 }

@@ -7,22 +7,34 @@ public enum Verb
     Idling = 0,
     Moving = 1,
     Jumping = 2,
-    Grabing = 4
+    Grabing = 4,
+    Grounded = 8,
+    Airbonrne = 16
 }
 
 public class StateMachine : MonoBehaviour
 {
-    [SerializeField] private Verb initalState;
+    [SerializeField] private Verb initalSuperState;
     [SerializeField] private Character character;
     [SerializeField] private InputManager inputManager;
 
     public Character Character => character;
     public InputManager InputManager => inputManager;
 
-    private State currentState = null;
+    public State currentState = null;
+    public State currentSuperState = null;
     private readonly Dictionary<Verb, State> aviableStates = new();
 
-    public void ChangeState(Verb verb)
+    public void ChangeSuperState(Verb verb)
+    {
+        currentSuperState?.Exit();
+
+        currentSuperState = aviableStates[verb];
+        currentSuperState.Enter();
+        Debug.Log("SUPER STATE " + verb);
+    }
+
+    public void ChangeSubState(Verb verb)
     {
         currentState?.Exit();
 
@@ -38,7 +50,9 @@ public class StateMachine : MonoBehaviour
             Verb.Moving => new Move(this),
             Verb.Jumping => new Jump(this),
             Verb.Grabing => new Grab(this),
-            _ => throw new NotImplementedException(),
+            Verb.Airbonrne => new Airborne(this),
+            Verb.Grounded => new Grounded(this),
+            _ => throw new NotImplementedException($"{verb} don't have a case on VerbToState method."),
         };
     }
 
@@ -51,7 +65,7 @@ public class StateMachine : MonoBehaviour
             aviableStates[verb] = VerbToState(verb);
         }
         
-        ChangeState(initalState);
+        ChangeSuperState(initalSuperState);
     }
 
     private void Awake()
@@ -64,7 +78,10 @@ public class StateMachine : MonoBehaviour
 
     private void FixedUpdate()
     {
-        currentState?.Behaviour();
+        currentState?.ConstantBehaviour();
         currentState?.CheckTransition();
+
+        currentSuperState?.ConstantBehaviour();
+        currentSuperState?.CheckTransition();
     }
 }
