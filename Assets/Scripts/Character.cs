@@ -14,7 +14,7 @@ public class Character : MonoBehaviour
 
     [Space(10f)]
     [Header("Gravity Forces")]
-    [SerializeField] private float groundedGravity;
+    [SerializeField] private float ascentGravity;
     [SerializeField] private float airborneGravity;
     [SerializeField] private float terminalVelocity = 53f;
     [SerializeField] private float airResistance = 0.1f;
@@ -29,13 +29,15 @@ public class Character : MonoBehaviour
     public float JumpForce { get => jumpForce; }
     public float Acceleration { get => acceleration; }
     public float RotationSpeed { get => rotationSpeed; }
-    public float GroundedGravity { get => groundedGravity; }
+    public float AscentGravity { get => ascentGravity; }
     public float AirborneGravity { get => airborneGravity; }
+    public float TerminalVelocity { get => terminalVelocity; }
+    public float AirResistance { get => airResistance; }
 
     private Rigidbody rb;
     private CapsuleCollider col;
 
-    public Rigidbody Rigidbody => rb;
+    public Rigidbody Rb => rb;
 
     private void Start()
     {

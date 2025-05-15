@@ -6,13 +6,16 @@ public class Grounded : FreeControl
     {
     }
 
-    protected override float ContextualGravity => character.GroundedGravity;
-
     private void GoToJump()
     {
         if (!character.IsGrounded()) return;
 
         parentMachine.ChangeSubState(Verb.Jumping);
+    }
+
+    public override void ConstantBehaviour()
+    {
+        base.ConstantBehaviour();
     }
 
     public override void Enter()

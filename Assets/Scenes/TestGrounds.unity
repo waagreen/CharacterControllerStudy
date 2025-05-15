@@ -647,13 +647,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e3b35d2ca639ca84eaa4d02b23b7a545, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 8
+  speed: 9
   maxSpeed: 16
-  jumpForce: 7
-  acceleration: 15
-  rotationSpeed: 20
-  groundedGravity: 9.81
-  airborneGravity: 39.24
+  jumpForce: 6
+  acceleration: 17
+  rotationSpeed: 25
+  ascentGravity: 8.9
+  airborneGravity: 26
   terminalVelocity: 53
   airResistance: 0.1
   groundLayer:
@@ -674,7 +674,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 077b0c8a528bc6f4ebb9accd9ad79fd7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  initalSuperState: 8
   character: {fileID: 1540084360}
   inputManager: {fileID: 1540084359}
 --- !u!136 &1540084362

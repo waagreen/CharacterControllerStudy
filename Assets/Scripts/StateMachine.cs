@@ -14,7 +14,6 @@ public enum Verb
 
 public class StateMachine : MonoBehaviour
 {
-    [SerializeField] private Verb initalSuperState;
     [SerializeField] private Character character;
     [SerializeField] private InputManager inputManager;
 
@@ -56,6 +55,12 @@ public class StateMachine : MonoBehaviour
         };
     }
 
+    private void SetInitialSuperState()
+    {
+        if (character.IsGrounded()) ChangeSuperState(Verb.Grounded);
+        else ChangeSuperState(Verb.Airbonrne);
+    }
+
     private void CreateStates()
     {
         // Read all values from the verbs enum and instantiate the equivalent states
@@ -64,16 +69,18 @@ public class StateMachine : MonoBehaviour
         {   
             aviableStates[verb] = VerbToState(verb);
         }
-        
-        ChangeSuperState(initalSuperState);
     }
 
     private void Awake()
     {
         CreateStates();
         character = GetComponent<Character>();
-        
         inputManager.CreateInputMap();
+    }
+
+    private void Start()
+    {
+        SetInitialSuperState();
     }
 
     private void FixedUpdate()

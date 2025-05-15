@@ -9,6 +9,7 @@ public class Jump : State
     public override void Enter()
     {
         Vector2 upwardsVelocity = Vector2.up * character.JumpForce;
-        character.Rigidbody.AddForce(upwardsVelocity, ForceMode.Impulse);
+        character.Rb.AddForce(upwardsVelocity, ForceMode.Impulse);
+        parentMachine.ChangeSuperState(Verb.Airbonrne);
     }
 }

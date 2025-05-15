@@ -30,21 +30,21 @@ public class Move : State
 
         // Calculate desired movement force
         Vector3 desiredVelocity = direction * character.Speed;
-        Vector3 currentVelocity = character.Rigidbody.linearVelocity;
+        Vector3 currentVelocity = character.Rb.linearVelocity;
         currentVelocity.y = 0;
 
         Vector3 velocityChange = desiredVelocity - currentVelocity;
         velocityChange = Vector3.ClampMagnitude(velocityChange, character.Acceleration * Time.deltaTime);
 
-        character.Rigidbody.AddForce(velocityChange, ForceMode.VelocityChange);
+        character.Rb.AddForce(velocityChange, ForceMode.VelocityChange);
 
         // Optional speed clamping
-        Vector3 horizontalVel = character.Rigidbody.linearVelocity;
+        Vector3 horizontalVel = character.Rb.linearVelocity;
         horizontalVel.y = 0f;
         if (horizontalVel.magnitude > character.MaxSpeed)
         {
             horizontalVel = horizontalVel.normalized * character.MaxSpeed;
-            character.Rigidbody.linearVelocity = new Vector3(horizontalVel.x, character.Rigidbody.linearVelocity.y, horizontalVel.z);
+            character.Rb.linearVelocity = new Vector3(horizontalVel.x, character.Rb.linearVelocity.y, horizontalVel.z);
         }
     }
 
@@ -56,7 +56,7 @@ public class Move : State
 
     public override void CheckTransition()
     {
-        if ((input.Movement == Vector2.zero) && (character.Rigidbody.linearVelocity == Vector3.zero))
+        if ((input.Movement == Vector2.zero) && (character.Rb.linearVelocity == Vector3.zero))
         {
             parentMachine.ChangeSubState(Verb.Idling);
         }
