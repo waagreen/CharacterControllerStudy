@@ -12,36 +12,41 @@ public enum Verb
     Airbonrne = 16
 }
 
+[RequireComponent(typeof(Character), typeof(InputManager))]
 public class StateMachine : MonoBehaviour
 {
-    [SerializeField] private Character character;
-    [SerializeField] private InputManager inputManager;
+    private Character character;
+    private InputManager inputManager;
+    private State currentState = null;
+    private State currentSuperState = null;
+    private readonly Dictionary<Verb, State> aviableStates = new();
 
     public Character Character => character;
     public InputManager InputManager => inputManager;
 
-    public State currentState = null;
-    public State currentSuperState = null;
-    private readonly Dictionary<Verb, State> aviableStates = new();
-
     public void ChangeSuperState(Verb verb)
     {
+        State stateToGo = aviableStates[verb];
+        if (currentSuperState == stateToGo) return;
+
         currentSuperState?.Exit();
 
-        currentSuperState = aviableStates[verb];
+        currentSuperState = stateToGo;
         currentSuperState.Enter();
-        Debug.Log("SUPER STATE " + verb);
     }
 
     public void ChangeSubState(Verb verb)
     {
+        State stateToGo = aviableStates[verb];
+        if (currentState == stateToGo) return;
+
         currentState?.Exit();
 
-        currentState = aviableStates[verb];
+        currentState = stateToGo;
         currentState.Enter();
     }
 
-    private State VerbToState(Verb verb) 
+    private State VerbToState(Verb verb)
     {
         return verb switch
         {
@@ -65,8 +70,8 @@ public class StateMachine : MonoBehaviour
     {
         // Read all values from the verbs enum and instantiate the equivalent states
         Verb[] stateVerbs = (Verb[])Enum.GetValues(typeof(Verb));
-        foreach(Verb verb in stateVerbs)
-        {   
+        foreach (Verb verb in stateVerbs)
+        {
             aviableStates[verb] = VerbToState(verb);
         }
     }
@@ -75,6 +80,7 @@ public class StateMachine : MonoBehaviour
     {
         CreateStates();
         character = GetComponent<Character>();
+        inputManager = GetComponent<InputManager>();
         inputManager.CreateInputMap();
     }
 
@@ -85,10 +91,10 @@ public class StateMachine : MonoBehaviour
 
     private void FixedUpdate()
     {
-        currentState?.ConstantBehaviour();
-        currentState?.CheckTransition();
-
         currentSuperState?.ConstantBehaviour();
         currentSuperState?.CheckTransition();
+
+        currentState?.ConstantBehaviour();
+        currentState?.CheckTransition();
     }
 }

@@ -8,14 +8,7 @@ public class Grounded : FreeControl
 
     private void GoToJump()
     {
-        if (!character.IsGrounded()) return;
-
         parentMachine.ChangeSubState(Verb.Jumping);
-    }
-
-    public override void ConstantBehaviour()
-    {
-        base.ConstantBehaviour();
     }
 
     public override void Enter()

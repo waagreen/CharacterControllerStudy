@@ -27,7 +27,7 @@ public class InputManager : MonoBehaviour
 
     private void TriggerJumpAction(InputAction.CallbackContext ctx)
     {
-        OnJump.Invoke();
+        OnJump?.Invoke();
     }
 
     public void CreateInputMap()

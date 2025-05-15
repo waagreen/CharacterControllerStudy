@@ -53,12 +53,4 @@ public class Move : State
         HandleMovement();
         HandleRotation();
     }
-
-    public override void CheckTransition()
-    {
-        if ((input.Movement == Vector2.zero) && (character.Rb.linearVelocity == Vector3.zero))
-        {
-            parentMachine.ChangeSubState(Verb.Idling);
-        }
-    }
 }

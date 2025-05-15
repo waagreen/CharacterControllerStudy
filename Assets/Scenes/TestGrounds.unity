@@ -647,15 +647,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e3b35d2ca639ca84eaa4d02b23b7a545, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 9
+  speed: 8
   maxSpeed: 16
   jumpForce: 6
-  acceleration: 17
-  rotationSpeed: 25
+  acceleration: 13
+  rotationSpeed: 50
   ascentGravity: 8.9
-  airborneGravity: 26
+  airborneGravity: 30
   terminalVelocity: 53
-  airResistance: 0.1
+  airResistance: 1.8
   groundLayer:
     serializedVersion: 2
     m_Bits: 64
