@@ -78,14 +78,13 @@ public class StateMachine : MonoBehaviour
 
     private void Awake()
     {
-        CreateStates();
         character = GetComponent<Character>();
+        character.Setup();
+
         inputManager = GetComponent<InputManager>();
         inputManager.CreateInputMap();
-    }
 
-    private void Start()
-    {
+        CreateStates();
         SetInitialSuperState();
     }
 

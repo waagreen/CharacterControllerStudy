@@ -39,7 +39,7 @@ public class Character : MonoBehaviour
 
     public Rigidbody Rb => rb;
 
-    private void Start()
+    public void Setup()
     {
         rb = GetComponent<Rigidbody>();
         col = GetComponent<CapsuleCollider>();
