@@ -647,11 +647,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e3b35d2ca639ca84eaa4d02b23b7a545, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 8
-  maxSpeed: 16
-  jumpForce: 6
-  acceleration: 13
+  maxSpeed: 10
+  jumpForce: 7
+  acceleration: 20
+  deceleration: 60
   rotationSpeed: 50
+  turnDecelerationMultiplier: 4
   ascentGravity: 8.9
   airborneGravity: 30
   terminalVelocity: 53
@@ -674,8 +675,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 077b0c8a528bc6f4ebb9accd9ad79fd7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  character: {fileID: 1540084360}
-  inputManager: {fileID: 1540084359}
 --- !u!136 &1540084362
 CapsuleCollider:
   m_ObjectHideFlags: 0

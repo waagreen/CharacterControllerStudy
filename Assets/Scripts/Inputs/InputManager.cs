@@ -37,22 +37,26 @@ public class InputManager : MonoBehaviour
         inputs = new();
         inputs.Enable();
 
-        inputs.Player.Move.performed += UpdateMovementValue;
         inputs.Player.Look.performed += UpdateCameraValue;
-                
-        inputs.Player.Move.canceled += UpdateMovementValue;
+        inputs.Player.Look.started += UpdateCameraValue;
         inputs.Player.Look.canceled += UpdateCameraValue;
+                
+        inputs.Player.Move.performed += UpdateMovementValue;
+        inputs.Player.Move.canceled += UpdateMovementValue;
+        inputs.Player.Move.started += UpdateMovementValue;
         
         inputs.Player.Jump.started += TriggerJumpAction;
     }
 
     private void OnDestroy()
     {
-        inputs.Player.Move.performed -= UpdateMovementValue;
         inputs.Player.Look.performed -= UpdateCameraValue;
-
-        inputs.Player.Move.canceled -= UpdateMovementValue;
+        inputs.Player.Look.started -= UpdateCameraValue;
         inputs.Player.Look.canceled -= UpdateCameraValue;
+
+        inputs.Player.Move.performed -= UpdateMovementValue;
+        inputs.Player.Move.canceled -= UpdateMovementValue;
+        inputs.Player.Move.started -= UpdateMovementValue;
 
         inputs.Player.Jump.started -= TriggerJumpAction;
         

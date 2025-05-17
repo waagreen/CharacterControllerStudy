@@ -5,11 +5,12 @@ using UnityEngine;
 public class Character : MonoBehaviour
 {
     [Header("Movement")]
-    [Range(0f, 50f)][SerializeField] private float speed;
-    [Range(0f, 50f)][SerializeField] private float maxSpeed;
-    [Range(0f, 15f)][SerializeField] private float jumpForce;
-    [Range(0f, 50f)][SerializeField] private float acceleration;
-    [Range(0f, 50f)][SerializeField] private float rotationSpeed;
+    [Range(0.1f, 50f)][SerializeField] private float maxSpeed;
+    [Range(0.1f, 15f)][SerializeField] private float jumpForce;
+    [Range(0.1f, 150f)][SerializeField] private float acceleration;
+    [Range(0.1f, 150f)][SerializeField] private float deceleration;
+    [Range(0.1f, 150f)][SerializeField] private float rotationSpeed;
+    [Range(1f, 10f)][SerializeField] private float turnDecelerationMultiplier = 3f;
 
 
     [Space(10f)]
@@ -24,25 +25,30 @@ public class Character : MonoBehaviour
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private LayerMask hurtLayer;
 
-    public float Speed { get => speed; }
+    private Rigidbody rb;
+    private CapsuleCollider col;
+    private static bool isSet = false;
+    
     public float MaxSpeed { get => maxSpeed; }
     public float JumpForce { get => jumpForce; }
     public float Acceleration { get => acceleration; }
+    public float Deceleration { get => deceleration; }
     public float RotationSpeed { get => rotationSpeed; }
     public float AscentGravity { get => ascentGravity; }
     public float AirborneGravity { get => airborneGravity; }
     public float TerminalVelocity { get => terminalVelocity; }
     public float AirResistance { get => airResistance; }
-
-    private Rigidbody rb;
-    private CapsuleCollider col;
-
-    public Rigidbody Rb => rb;
+    public float TurnDecelerationMultiplier { get => turnDecelerationMultiplier; }
+    public Rigidbody Rb { get => rb; }
 
     public void Setup()
     {
+        if (isSet) return;
+
         rb = GetComponent<Rigidbody>();
         col = GetComponent<CapsuleCollider>();
+
+        isSet = true;
     }
 
     public bool IsGrounded()
