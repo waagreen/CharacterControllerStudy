@@ -9,11 +9,13 @@ public class InputManager : MonoBehaviour
     // Internal input variables
     private Vector2 movementInput = Vector2.zero;
     private Vector2 cameraInput = Vector2.zero;
+    private bool jumpValue = false;
 
     // Public accessible input variables
-    public Action OnJump; 
-    public Vector2 Movement => movementInput;
-    public Vector2 Look => cameraInput;
+    public Action<bool> OnJump; 
+    public Vector2 Movement { get => movementInput; }
+    public Vector2 Look { get => cameraInput; }
+    public bool JumpValue { get => jumpValue; }
 
     private void UpdateMovementValue(InputAction.CallbackContext ctx)
     {
@@ -27,7 +29,8 @@ public class InputManager : MonoBehaviour
 
     private void TriggerJumpAction(InputAction.CallbackContext ctx)
     {
-        OnJump?.Invoke();
+        jumpValue = ctx.ReadValueAsButton();
+        OnJump?.Invoke(jumpValue);
     }
 
     public void CreateInputMap()
@@ -40,12 +43,13 @@ public class InputManager : MonoBehaviour
         inputs.Player.Look.performed += UpdateCameraValue;
         inputs.Player.Look.started += UpdateCameraValue;
         inputs.Player.Look.canceled += UpdateCameraValue;
-                
+
         inputs.Player.Move.performed += UpdateMovementValue;
         inputs.Player.Move.canceled += UpdateMovementValue;
         inputs.Player.Move.started += UpdateMovementValue;
-        
+
         inputs.Player.Jump.started += TriggerJumpAction;
+        inputs.Player.Jump.canceled += TriggerJumpAction;
     }
 
     private void OnDestroy()
@@ -59,6 +63,7 @@ public class InputManager : MonoBehaviour
         inputs.Player.Move.started -= UpdateMovementValue;
 
         inputs.Player.Jump.started -= TriggerJumpAction;
+        inputs.Player.Jump.canceled -= TriggerJumpAction;
         
         inputs.Disable();
         inputs = null;

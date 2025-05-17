@@ -648,15 +648,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxSpeed: 10
-  jumpForce: 7
+  jumpForce: 30
   acceleration: 20
   deceleration: 60
   rotationSpeed: 50
-  turnDecelerationMultiplier: 4
+  turnDecelerationMultiplier: 3
+  maxJumpTime: 0.15
   ascentGravity: 8.9
   airborneGravity: 30
   terminalVelocity: 53
-  airResistance: 1.8
+  airResistance: 1.5
   groundLayer:
     serializedVersion: 2
     m_Bits: 64

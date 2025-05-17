@@ -1,9 +1,10 @@
 using UnityEngine;
 
-public class Airborne : FreeControl
+public class Airborne : SuperState
 {
     private float enterTime = 0f;
     private const float kMinAirborneTime = 0.1f;
+    protected override Verb InitialSubstate { get => Verb.Idling; }
 
     public Airborne(StateMachine machine) : base(machine)
     {
@@ -52,7 +53,7 @@ public class Airborne : FreeControl
     public override void CheckTransition()
     {
         base.CheckTransition();
-        if (Time.time > (enterTime + kMinAirborneTime) && character.IsGrounded())
+        if ((Time.time > (enterTime + kMinAirborneTime)) && character.IsGrounded())
         {
             // Kills vertical velocity when hits the ground to avoid bouncing
             Vector3 noVerticalVelocity = character.Rb.linearVelocity;

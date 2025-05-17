@@ -94,8 +94,19 @@ public class Move : State
         ClampHorizontalSpeed();
     }
 
+    public override void CheckTransition()
+    {
+        base.CheckTransition();
+
+        if ((input.Movement == Vector2.zero) && (character.Rb.linearVelocity == Vector3.zero))
+        {
+            parentMachine.ChangeSubState(Verb.Idling);
+        }
+    }
+
     public override void ConstantBehaviour()
     {
+        base.ConstantBehaviour();
         HandleMovement();
         HandleRotation();
     }
