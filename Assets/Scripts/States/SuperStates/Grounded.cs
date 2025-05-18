@@ -14,6 +14,17 @@ public class Grounded : SuperState
         parentMachine.ChangeSubState(Verb.Jumping);
     }
 
+    public override void CheckTransition()
+    {
+        base.CheckTransition();
+
+        // TODO: FIX GROUNDED GRAVITY
+        // if (!character.IsGrounded())
+        // {
+        //     parentMachine.ChangeSuperState(Verb.Airbonrne);
+        // }
+    }
+
     public override void Enter()
     {
         base.Enter();
