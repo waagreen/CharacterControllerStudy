@@ -19,12 +19,13 @@ public class InputManager : MonoBehaviour
 
     private void UpdateMovementValue(InputAction.CallbackContext ctx)
     {
-        movementInput = ctx.ReadValue<Vector2>();
+        movementInput = Vector3.ClampMagnitude(ctx.ReadValue<Vector2>(), 1f);
+
     }
 
     private void UpdateCameraValue(InputAction.CallbackContext ctx)
     {
-        cameraInput = ctx.ReadValue<Vector2>();
+        cameraInput = Vector3.ClampMagnitude(ctx.ReadValue<Vector2>(), 1f);
     }
 
     private void TriggerJumpAction(InputAction.CallbackContext ctx)

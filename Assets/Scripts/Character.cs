@@ -1,59 +1,57 @@
+using Unity.VisualScripting;
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody), typeof(CapsuleCollider))]
+[RequireComponent(typeof(InputManager))]
 public class Character : MonoBehaviour
 {
-    [Header("Movement")]
-    [Range(0.1f, 50f)][SerializeField] private float maxSpeed;
-    [Range(0.1f, 50f)][SerializeField] private float jumpForce;
-    [Range(0.1f, 150f)][SerializeField] private float acceleration;
-    [Range(0.1f, 150f)][SerializeField] private float deceleration;
-    [Range(0.1f, 150f)][SerializeField] private float rotationSpeed;
-    [Range(1f, 10f)][SerializeField] private float turnDecelerationMultiplier = 3f;
-    [Min(0.1f)][SerializeField] private float maxJumpTime;
+    [Range(1f, 100f)][SerializeField] private float maxSpeed = 10f;
+    [Range(1f, 100f)][SerializeField] private float maxAcceleration = 10f;
+    [Range(0f, 1f)][SerializeField] private float bounciness = 0.5f;
+    [SerializeField] private Rect allowedArea = new(0, 0, 10f, 10f);
 
+    Vector3 velocity = Vector3.zero;
+    private InputManager input;
 
-    [Space(10f)]
-    [Header("Gravity Forces")]
-    [SerializeField] private float ascentGravity;
-    [SerializeField] private float airborneGravity;
-    [SerializeField] private float terminalVelocity = 53f;
-    [SerializeField] private float airResistance = 0.1f;
-
-    [Space(10f)]
-    [Header("Collision")]
-    [SerializeField] private LayerMask groundLayer;
-    [SerializeField] private LayerMask hurtLayer;
-
-    private Rigidbody rb;
-    private CapsuleCollider col;
-    private static bool isSet = false;
-
-    public float MaxSpeed { get => maxSpeed; }
-    public float JumpForce { get => jumpForce; }
-    public float Acceleration { get => acceleration; }
-    public float Deceleration { get => deceleration; }
-    public float RotationSpeed { get => rotationSpeed; }
-    public float AscentGravity { get => ascentGravity; }
-    public float AirborneGravity { get => airborneGravity; }
-    public float TerminalVelocity { get => terminalVelocity; }
-    public float AirResistance { get => airResistance; }
-    public float TurnDecelerationMultiplier { get => turnDecelerationMultiplier; }
-    public float MaxJumpTime { get => maxJumpTime; }
-    public Rigidbody Rb { get => rb; }
-
-    public void Setup()
+    private void Start()
     {
-        if (isSet) return;
-
-        rb = GetComponent<Rigidbody>();
-        col = GetComponent<CapsuleCollider>();
-
-        isSet = true;
+        input = GetComponent<InputManager>();
+        input.CreateInputMap();
     }
 
-    public bool IsGrounded()
+    private void Update()
     {
-        return Physics.Raycast(transform.position, Vector3.down, col.height + 0.1f, groundLayer);
+        Vector3 desiredVelocity = new Vector3(input.Movement.x, 0f, input.Movement.y) * maxSpeed;
+        float maxSpeedChange = maxAcceleration * Time.deltaTime;
+
+        velocity.x = Mathf.MoveTowards(velocity.x, desiredVelocity.x, maxSpeedChange);
+        velocity.z = Mathf.MoveTowards(velocity.z, desiredVelocity.z, maxSpeedChange);
+
+        Vector3 displacement = velocity * Time.deltaTime;
+        Vector3 newPosition = transform.position + displacement;
+
+        // Kills velocity pointing towards the collided area 
+        if (newPosition.x < allowedArea.xMin)
+        {
+            newPosition.x = allowedArea.xMin;
+            velocity.x = -velocity.x * bounciness;
+        }
+        else if (newPosition.x > allowedArea.xMax)
+        {
+            newPosition.x = allowedArea.xMax;
+            velocity.x = -velocity.x * bounciness;
+        }
+
+        if (newPosition.z < allowedArea.yMin)
+        {
+            newPosition.z = allowedArea.yMin;
+            velocity.z = -velocity.z * bounciness;
+        }
+        else if (newPosition.z > allowedArea.yMax)
+        {
+            newPosition.z = allowedArea.yMax;
+            velocity.z = -velocity.z * bounciness;
+        }
+
+        transform.position = newPosition;
     }
 }

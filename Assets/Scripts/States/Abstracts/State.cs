@@ -4,7 +4,7 @@ public abstract class State
 {
     protected StateMachine parentMachine;
     protected InputManager input;
-    protected Character character;
+    protected MovementBehaviour character;
 
     public State(StateMachine machine)
     {

@@ -39,7 +39,8 @@ public class CameraController : MonoBehaviour
     {
         if (!shouldFollow || isRotating) return;
 
-        Vector3 targetPosition = target.TransformPoint(followOffset);
+        Vector3 targetPosition = target.position + followOffset;
+
         transform.position = Vector3.SmoothDamp(transform.position, targetPosition, ref velocity, smoothTime);
         transform.LookAt(target);
     }
@@ -55,6 +56,6 @@ public class CameraController : MonoBehaviour
         if (target == null) return;
 
         Gizmos.color = Color.red;
-        Gizmos.DrawSphere(target.TransformPoint(followOffset), 1f);        
+        Gizmos.DrawSphere(target.position + followOffset, 1f);        
     }
 }

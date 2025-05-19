@@ -574,8 +574,8 @@ MonoBehaviour:
   target: {fileID: 1540084358}
   followOffset: {x: 0, y: 3.15, z: -4.6}
   shouldFollow: 1
-  smoothTime: 0.3
-  rotationSpeed: 1
+  smoothTime: 0.6
+  rotationSpeed: 2
 --- !u!1 &1540084356
 GameObject:
   m_ObjectHideFlags: 0

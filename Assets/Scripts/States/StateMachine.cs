@@ -12,16 +12,16 @@ public enum Verb
     Airbonrne = 16
 }
 
-[RequireComponent(typeof(Character), typeof(InputManager))]
+[RequireComponent(typeof(MovementBehaviour), typeof(InputManager))]
 public class StateMachine : MonoBehaviour
 {
-    private Character character;
+    private MovementBehaviour character;
     private InputManager inputManager;
     private State currentState = null;
     private State currentSuperState = null;
     private readonly Dictionary<Verb, State> aviableStates = new();
 
-    public Character Character => character;
+    public MovementBehaviour Character => character;
     public InputManager InputManager => inputManager;
 
     public void ChangeSuperState(Verb verb)
@@ -78,7 +78,7 @@ public class StateMachine : MonoBehaviour
 
     private void Awake()
     {
-        character = GetComponent<Character>();
+        character = GetComponent<MovementBehaviour>();
         character.Setup();
 
         inputManager = GetComponent<InputManager>();
