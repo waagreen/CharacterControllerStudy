@@ -16,6 +16,7 @@ public class InputManager : MonoBehaviour
     public Vector2 Movement { get => movementInput; }
     public Vector2 Look { get => cameraInput; }
     public bool JumpValue { get => jumpValue; }
+    public InputAction Jump { get => inputs.Player.Jump; }
 
     private void UpdateMovementValue(InputAction.CallbackContext ctx)
     {
