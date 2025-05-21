@@ -138,7 +138,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxSpeed: 6
   maxAcceleration: 35
-  maxAirAcceleration: 9
+  maxAirAcceleration: 0
+  maxGroundAngle: 40
   jumpHeight: 2
 --- !u!96 &6626131416219692495
 TrailRenderer:

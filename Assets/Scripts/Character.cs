@@ -4,21 +4,26 @@ using UnityEngine;
 public class Character : MonoBehaviour
 {
     [Header("Movement Settings")]
-    [Range(1f, 100f)][SerializeField] private float maxSpeed = 10f;
-    [Range(1f, 100f)][SerializeField] private float maxAcceleration = 10f;
-    [Range(1f, 100f)][SerializeField] private float maxAirAcceleration = 1f;
+    [Range(0f, 100f)][SerializeField] private float maxSpeed = 10f;
+    [Range(0f, 100f)][SerializeField] private float maxAcceleration = 10f;
+    [Range(0f, 100f)][SerializeField] private float maxAirAcceleration = 1f;
+    [Range(0f, 90f)][SerializeField] private float maxGroundAngle = 25f;
 
     [Header("Jump Settings")]
     [Range(1f, 10f)][SerializeField] private float jumpHeight = 2f;
     [Range(1, 5)] private readonly int maxAirJumps = 2;
 
-    private Vector3 velocity, desiredVelocity = Vector3.zero;
+    // Assigned on awake (don't change)
     private InputManager input;
     private Rigidbody rb;
 
+    // Runtime variables
+    private Vector3 velocity, desiredVelocity = Vector3.zero;
+    private Vector3 contactNormal = Vector3.zero;
     private bool isGrounded = false;
     private bool desiredJump = false;
     private int jumpPhase = 0;
+    private float minGroundDotProduct = 0f;
 
     private void Jump()
     {
@@ -28,8 +33,9 @@ public class Character : MonoBehaviour
         float jumpSpeed = Mathf.Sqrt(-2f * Physics.gravity.y * jumpHeight);
 
         // Canceling an already existing vertical velocity prevents sequential jumps to go higher than intended
-        if (velocity.y > 0f) jumpSpeed = Mathf.Max(jumpSpeed - velocity.y, 0f);
-        velocity.y += jumpSpeed;
+        float alignedSpeed = Vector3.Dot(velocity, contactNormal);
+        if (alignedSpeed > 0f) jumpSpeed = Mathf.Max(jumpSpeed - alignedSpeed, 0f);
+        velocity += contactNormal * jumpSpeed;
 
         // increase internal jump count
         jumpPhase++;
@@ -40,10 +46,34 @@ public class Character : MonoBehaviour
         for (int i = 0; i < collision.contactCount; i++)
         {
             Vector3 normal = collision.GetContact(i).normal;
-
-            // If contact happend on a surface point mostly up, then is grounded
-            isGrounded |= normal.y >= 0.9f;
+            if (normal.y >= minGroundDotProduct)
+            {
+                isGrounded = true;
+                contactNormal = normal;
+            }
         }
+    }
+
+    private Vector3 ProjectOnContactPlane(Vector3 vector)
+    {
+        return vector - contactNormal * Vector3.Dot(vector, contactNormal);
+    }
+
+    private void AdjustVelocity()
+    {
+        Vector3 xAxis = ProjectOnContactPlane(Vector3.right).normalized;
+        Vector3 zAxis = ProjectOnContactPlane(Vector3.forward).normalized;
+
+        float currentX = Vector3.Dot(velocity, xAxis);
+        float currentZ = Vector3.Dot(velocity, zAxis);
+
+        float acceleration = isGrounded ? maxAcceleration : maxAirAcceleration;
+        float maxSpeedChange = acceleration * Time.deltaTime;
+
+        float newX = Mathf.MoveTowards(currentX, desiredVelocity.x, maxSpeedChange);
+        float newZ = Mathf.MoveTowards(currentZ, desiredVelocity.z, maxSpeedChange);
+
+        velocity += xAxis * (newX - currentX) + zAxis * (newZ - currentZ);
     }
 
     private void UpdateState()
@@ -51,13 +81,21 @@ public class Character : MonoBehaviour
         velocity = rb.linearVelocity;
 
         if (isGrounded) jumpPhase = 0;
+        else contactNormal = Vector3.up;
     }
 
-    private void Start()
+    private void OnValidate()
+    {
+        minGroundDotProduct = Mathf.Cos(maxGroundAngle * Mathf.Deg2Rad);
+    }
+
+    private void Awake()
     {
         rb = GetComponent<Rigidbody>();
         input = GetComponent<InputManager>();
         input.CreateInputMap();
+
+        OnValidate();
     }
 
     private void Update()
@@ -69,12 +107,7 @@ public class Character : MonoBehaviour
     private void FixedUpdate()
     {
         UpdateState();
-
-        float accelaration = isGrounded ? maxAcceleration : maxAirAcceleration;
-        float maxSpeedChange = accelaration * Time.deltaTime;
-
-        velocity.x = Mathf.MoveTowards(velocity.x, desiredVelocity.x, maxSpeedChange);
-        velocity.z = Mathf.MoveTowards(velocity.z, desiredVelocity.z, maxSpeedChange);
+        AdjustVelocity();
 
         if (desiredJump)
         {
