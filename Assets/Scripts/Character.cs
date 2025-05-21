@@ -23,6 +23,7 @@ public class Character : MonoBehaviour
     private Vector3 contactNormal = Vector3.zero;
     private bool desiredJump = false;
     private int groundContactCount = 0;
+    private int stepsSinceLastGrounded = 0;
     private int jumpPhase = 0;
     private float minGroundDotProduct = 0f;
 
@@ -79,13 +80,29 @@ public class Character : MonoBehaviour
         velocity += xAxis * (newX - currentX) + zAxis * (newZ - currentZ);
     }
 
+    private bool SnapToGround()
+    {
+        if (stepsSinceLastGrounded > 1) return false;
+        if (!Physics.Raycast(rb.position, Vector3.down, out RaycastHit hit)) return false;
+        if (hit.normal.y < minGroundDotProduct) return false;
+
+        groundContactCount = 1;
+        contactNormal = hit.normal;
+        float speed = velocity.magnitude;
+        float dot = Vector3.Dot(velocity, contactNormal);
+        if (dot > 0f) velocity = (velocity - contactNormal * dot).normalized * speed;
+        return true;
+    }
+
     private void UpdateState()
     {
         velocity = rb.linearVelocity;
+        stepsSinceLastGrounded++;
 
-        if (OnGround)
+        if (OnGround || SnapToGround())
         {
             jumpPhase = 0;
+            stepsSinceLastGrounded = 0;
 
             // Only normalize contact if it is an aggregate
             if (groundContactCount > 1)
