@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 1996056126353008822}
   - component: {fileID: 6626131416219692495}
   - component: {fileID: 1347971876504365439}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Character
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -137,10 +137,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxSpeed: 6
+  maxSnapSpeed: 7
   maxAcceleration: 35
   maxAirAcceleration: 0
   maxGroundAngle: 40
   jumpHeight: 2
+  maxAirJumps: 2
+  probeDistance: 1
+  probeMask:
+    serializedVersion: 2
+    m_Bits: 115
 --- !u!96 &6626131416219692495
 TrailRenderer:
   serializedVersion: 3

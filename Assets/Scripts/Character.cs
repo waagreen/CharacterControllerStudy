@@ -5,13 +5,18 @@ public class Character : MonoBehaviour
 {
     [Header("Movement Settings")]
     [Range(0f, 100f)][SerializeField] private float maxSpeed = 10f;
+    [Range(0f, 100f)][SerializeField] private float maxSnapSpeed = 9f;
     [Range(0f, 100f)][SerializeField] private float maxAcceleration = 10f;
     [Range(0f, 100f)][SerializeField] private float maxAirAcceleration = 1f;
     [Range(0f, 90f)][SerializeField] private float maxGroundAngle = 25f;
 
     [Header("Jump Settings")]
     [Range(1f, 10f)][SerializeField] private float jumpHeight = 2f;
-    [Range(1, 5)] private readonly int maxAirJumps = 2;
+    [Range(1, 5)][SerializeField] private int maxAirJumps = 2;
+
+    [Header("Raycast Settings")]
+    [Min(0f)][SerializeField] private float probeDistance = 1f;
+    [SerializeField] private LayerMask probeMask = -1;
 
     // Assigned on awake (don't change)
     private InputManager input;
@@ -22,9 +27,10 @@ public class Character : MonoBehaviour
     private Vector3 velocity, desiredVelocity = Vector3.zero;
     private Vector3 contactNormal = Vector3.zero;
     private bool desiredJump = false;
-    private int groundContactCount = 0;
-    private int stepsSinceLastGrounded = 0;
     private int jumpPhase = 0;
+    private int groundContactCount = 0;
+    private int stepsSinceLastJumped = 0;
+    private int stepsSinceLastGrounded = 0;
     private float minGroundDotProduct = 0f;
 
     private bool OnGround => groundContactCount > 0;
@@ -32,6 +38,9 @@ public class Character : MonoBehaviour
     private void Jump()
     {
         if (!OnGround && jumpPhase >= maxAirJumps) return;
+
+        stepsSinceLastJumped = 0;
+        jumpPhase++;
 
         // Jump speed overcoming gravity formula
         float jumpSpeed = Mathf.Sqrt(-2f * Physics.gravity.y * jumpHeight);
@@ -41,8 +50,6 @@ public class Character : MonoBehaviour
         if (alignedSpeed > 0f) jumpSpeed = Mathf.Max(jumpSpeed - alignedSpeed, 0f);
         velocity += contactNormal * jumpSpeed;
 
-        // increase internal jump count
-        jumpPhase++;
     }
 
     private void EvaluateCollision(Collision collision)
@@ -82,13 +89,16 @@ public class Character : MonoBehaviour
 
     private bool SnapToGround()
     {
-        if (stepsSinceLastGrounded > 1) return false;
-        if (!Physics.Raycast(rb.position, Vector3.down, out RaycastHit hit)) return false;
+        if (stepsSinceLastGrounded > 1 || stepsSinceLastJumped <= 2f) return false;
+
+        float speed = velocity.magnitude;
+        if (speed > maxSnapSpeed) return false;
+
+        if (!Physics.Raycast(rb.position, Vector3.down, out RaycastHit hit, probeDistance, probeMask)) return false;
         if (hit.normal.y < minGroundDotProduct) return false;
 
         groundContactCount = 1;
         contactNormal = hit.normal;
-        float speed = velocity.magnitude;
         float dot = Vector3.Dot(velocity, contactNormal);
         if (dot > 0f) velocity = (velocity - contactNormal * dot).normalized * speed;
         return true;
@@ -97,7 +107,9 @@ public class Character : MonoBehaviour
     private void UpdateState()
     {
         velocity = rb.linearVelocity;
+
         stepsSinceLastGrounded++;
+        stepsSinceLastJumped++;
 
         if (OnGround || SnapToGround())
         {
