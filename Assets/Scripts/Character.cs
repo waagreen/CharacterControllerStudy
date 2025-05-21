@@ -16,18 +16,21 @@ public class Character : MonoBehaviour
     // Assigned on awake (don't change)
     private InputManager input;
     private Rigidbody rb;
+    private Renderer rend;
 
     // Runtime variables
     private Vector3 velocity, desiredVelocity = Vector3.zero;
     private Vector3 contactNormal = Vector3.zero;
-    private bool isGrounded = false;
     private bool desiredJump = false;
+    private int groundContactCount = 0;
     private int jumpPhase = 0;
     private float minGroundDotProduct = 0f;
 
+    private bool OnGround => groundContactCount > 0;
+
     private void Jump()
     {
-        if (!isGrounded && jumpPhase >= maxAirJumps) return;
+        if (!OnGround && jumpPhase >= maxAirJumps) return;
 
         // Jump speed overcoming gravity formula
         float jumpSpeed = Mathf.Sqrt(-2f * Physics.gravity.y * jumpHeight);
@@ -48,8 +51,8 @@ public class Character : MonoBehaviour
             Vector3 normal = collision.GetContact(i).normal;
             if (normal.y >= minGroundDotProduct)
             {
-                isGrounded = true;
-                contactNormal = normal;
+                groundContactCount++;
+                contactNormal += normal;
             }
         }
     }
@@ -67,7 +70,7 @@ public class Character : MonoBehaviour
         float currentX = Vector3.Dot(velocity, xAxis);
         float currentZ = Vector3.Dot(velocity, zAxis);
 
-        float acceleration = isGrounded ? maxAcceleration : maxAirAcceleration;
+        float acceleration = OnGround ? maxAcceleration : maxAirAcceleration;
         float maxSpeedChange = acceleration * Time.deltaTime;
 
         float newX = Mathf.MoveTowards(currentX, desiredVelocity.x, maxSpeedChange);
@@ -80,8 +83,23 @@ public class Character : MonoBehaviour
     {
         velocity = rb.linearVelocity;
 
-        if (isGrounded) jumpPhase = 0;
+        if (OnGround)
+        {
+            jumpPhase = 0;
+
+            // Only normalize contact if it is an aggregate
+            if (groundContactCount > 1)
+            {
+                contactNormal.Normalize();
+            }
+        }
         else contactNormal = Vector3.up;
+    }
+
+    private void ClearState()
+    {
+        groundContactCount = 0;
+        contactNormal = Vector3.zero;
     }
 
     private void OnValidate()
@@ -92,6 +110,7 @@ public class Character : MonoBehaviour
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
+        rend = GetComponent<Renderer>();
         input = GetComponent<InputManager>();
         input.CreateInputMap();
 
@@ -100,6 +119,8 @@ public class Character : MonoBehaviour
 
     private void Update()
     {
+        rend.material.SetColor("_Color", Color.white * (groundContactCount * 0.25f));
+
         desiredVelocity = new Vector3(input.Movement.x, 0f, input.Movement.y) * maxSpeed;
         desiredJump |= input.Jump.WasPressedThisFrame();
     }
@@ -114,9 +135,9 @@ public class Character : MonoBehaviour
             desiredJump = false;
             Jump();
         }
-
         rb.linearVelocity = velocity;
-        isGrounded = false;
+
+        ClearState();
     }
 
     private void OnCollisionEnter(Collision collision)

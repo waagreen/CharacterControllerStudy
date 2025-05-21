@@ -29,18 +29,18 @@ public class MovementBehaviour : MonoBehaviour
     private CapsuleCollider col;
     private static bool isSet = false;
 
-    public float MaxSpeed { get => maxSpeed; }
-    public float JumpForce { get => jumpForce; }
-    public float Acceleration { get => acceleration; }
-    public float Deceleration { get => deceleration; }
-    public float RotationSpeed { get => rotationSpeed; }
-    public float AscentGravity { get => ascentGravity; }
-    public float AirborneGravity { get => airborneGravity; }
-    public float TerminalVelocity { get => terminalVelocity; }
-    public float AirResistance { get => airResistance; }
-    public float TurnDecelerationMultiplier { get => turnDecelerationMultiplier; }
-    public float MaxJumpTime { get => maxJumpTime; }
-    public Rigidbody Rb { get => rb; }
+    public float MaxSpeed => maxSpeed;
+    public float JumpForce => jumpForce;
+    public float Acceleration => acceleration; 
+    public float Deceleration => deceleration; 
+    public float RotationSpeed => rotationSpeed; 
+    public float AscentGravity => ascentGravity; 
+    public float AirborneGravity => airborneGravity; 
+    public float TerminalVelocity => terminalVelocity; 
+    public float AirResistance => airResistance; 
+    public float TurnDecelerationMultiplier => turnDecelerationMultiplier; 
+    public float MaxJumpTime => maxJumpTime; 
+    public Rigidbody Rb => rb; 
 
     public void Setup()
     {

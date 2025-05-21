@@ -13,10 +13,10 @@ public class InputManager : MonoBehaviour
 
     // Public accessible input variables
     public Action<bool> OnJump; 
-    public Vector2 Movement { get => movementInput; }
-    public Vector2 Look { get => cameraInput; }
-    public bool JumpValue { get => jumpValue; }
-    public InputAction Jump { get => inputs.Player.Jump; }
+    public Vector2 Movement => movementInput;
+    public Vector2 Look => cameraInput;
+    public bool JumpValue  => jumpValue;
+    public InputAction Jump => inputs.Player.Jump;
 
     private void UpdateMovementValue(InputAction.CallbackContext ctx)
     {
