@@ -9,6 +9,8 @@ public class Character : MonoBehaviour
     [Range(0f, 100f)][SerializeField] private float maxAcceleration = 10f;
     [Range(0f, 100f)][SerializeField] private float maxAirAcceleration = 1f;
     [Range(0f, 90f)][SerializeField] private float maxGroundAngle = 25f;
+    [Range(0f, 90f)][SerializeField] private float maxStairAngle = 46f;
+
 
     [Header("Jump Settings")]
     [Range(1f, 10f)][SerializeField] private float jumpHeight = 2f;
@@ -17,6 +19,7 @@ public class Character : MonoBehaviour
     [Header("Raycast Settings")]
     [Min(0f)][SerializeField] private float probeDistance = 1f;
     [SerializeField] private LayerMask probeMask = -1;
+    [SerializeField] private LayerMask stairMask = -1;
 
     // Assigned on awake (don't change)
     private InputManager input;
@@ -32,8 +35,16 @@ public class Character : MonoBehaviour
     private int stepsSinceLastJumped = 0;
     private int stepsSinceLastGrounded = 0;
     private float minGroundDotProduct = 0f;
+    private float minStairDotProduct = 0f;
+
 
     private bool OnGround => groundContactCount > 0;
+
+    float GetMinDot(int layer)
+    {
+        bool useGroundDot = (stairMask & (1 << layer)) == 0;
+        return useGroundDot ? minGroundDotProduct : minStairDotProduct;
+    }
 
     private void Jump()
     {
@@ -57,7 +68,7 @@ public class Character : MonoBehaviour
         for (int i = 0; i < collision.contactCount; i++)
         {
             Vector3 normal = collision.GetContact(i).normal;
-            if (normal.y >= minGroundDotProduct)
+            if (normal.y >= GetMinDot(collision.gameObject.layer))
             {
                 groundContactCount++;
                 contactNormal += normal;
@@ -94,7 +105,7 @@ public class Character : MonoBehaviour
         float speed = velocity.magnitude;
         if (speed > maxSnapSpeed) return false;
         if (!Physics.Raycast(rb.position, Vector3.down, out RaycastHit hit, probeDistance, probeMask)) return false;
-        if (hit.normal.y < minGroundDotProduct) return false;
+        if (hit.normal.y < GetMinDot(hit.collider.gameObject.layer)) return false;
 
         groundContactCount = 1;
         contactNormal = hit.normal;
@@ -133,6 +144,7 @@ public class Character : MonoBehaviour
     private void OnValidate()
     {
         minGroundDotProduct = Mathf.Cos(maxGroundAngle * Mathf.Deg2Rad);
+        minStairDotProduct = Mathf.Cos(maxStairAngle * Mathf.Deg2Rad);
     }
 
     private void Awake()
