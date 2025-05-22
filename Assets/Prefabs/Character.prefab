@@ -146,7 +146,7 @@ MonoBehaviour:
   probeDistance: 1
   probeMask:
     serializedVersion: 2
-    m_Bits: 115
+    m_Bits: 1139
 --- !u!96 &6626131416219692495
 TrailRenderer:
   serializedVersion: 3

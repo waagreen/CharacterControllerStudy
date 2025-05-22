@@ -89,11 +89,10 @@ public class Character : MonoBehaviour
 
     private bool SnapToGround()
     {
-        if (stepsSinceLastGrounded > 1 || stepsSinceLastJumped <= 2f) return false;
+        if (stepsSinceLastGrounded > 1 || stepsSinceLastJumped <= 2) return false;
 
         float speed = velocity.magnitude;
         if (speed > maxSnapSpeed) return false;
-
         if (!Physics.Raycast(rb.position, Vector3.down, out RaycastHit hit, probeDistance, probeMask)) return false;
         if (hit.normal.y < minGroundDotProduct) return false;
 
@@ -140,6 +139,7 @@ public class Character : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         rend = GetComponent<Renderer>();
+
         input = GetComponent<InputManager>();
         input.CreateInputMap();
 
