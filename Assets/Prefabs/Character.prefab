@@ -140,13 +140,17 @@ MonoBehaviour:
   maxSnapSpeed: 7
   maxAcceleration: 35
   maxAirAcceleration: 0
-  maxGroundAngle: 46
+  maxGroundAngle: 40
+  maxStairAngle: 46
   jumpHeight: 2
   maxAirJumps: 2
   probeDistance: 1
   probeMask:
     serializedVersion: 2
     m_Bits: 1139
+  stairMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
 --- !u!96 &6626131416219692495
 TrailRenderer:
   serializedVersion: 3

@@ -28,17 +28,15 @@ public class Character : MonoBehaviour
 
     // Runtime variables
     private Vector3 velocity, desiredVelocity = Vector3.zero;
-    private Vector3 contactNormal = Vector3.zero;
+    private Vector3 contactNormal, steepNormal = Vector3.zero;
     private bool desiredJump = false;
     private int jumpPhase = 0;
-    private int groundContactCount = 0;
-    private int stepsSinceLastJumped = 0;
-    private int stepsSinceLastGrounded = 0;
-    private float minGroundDotProduct = 0f;
-    private float minStairDotProduct = 0f;
-
+    private int groundContactCount, steepContactCount = 0;
+    private int stepsSinceLastGrounded, stepsSinceLastJumped = 0;
+    private float minGroundDotProduct, minStairDotProduct = 0f;
 
     private bool OnGround => groundContactCount > 0;
+    private bool OnSteep => steepContactCount > 0;
 
     float GetMinDot(int layer)
     {
@@ -46,9 +44,32 @@ public class Character : MonoBehaviour
         return useGroundDot ? minGroundDotProduct : minStairDotProduct;
     }
 
+    private Vector3 GetJumpDirection()
+    {
+        if (OnGround)
+        {
+            //Just standing on a normal surface
+            return contactNormal; 
+        }
+        else if (OnSteep)
+        {
+            jumpPhase = 0;
+            //Steep surfaces comes before air jumps because they need to be treated as ground
+            return steepNormal;
+        }
+        else if ((maxAirJumps > 0) && (jumpPhase <= maxAirJumps))
+        {
+            if (jumpPhase == 0) jumpPhase = 1;
+            //In this case contactNormal was already set to Vector3.Up
+            return contactNormal;
+        }
+        else return Vector3.zero;
+    }
+
     private void Jump()
     {
-        if (!OnGround && jumpPhase >= maxAirJumps) return;
+        Vector3 jumpDirection = GetJumpDirection();
+        if (jumpDirection == Vector3.zero) return;
 
         stepsSinceLastJumped = 0;
         jumpPhase++;
@@ -56,11 +77,13 @@ public class Character : MonoBehaviour
         // Jump speed overcoming gravity formula
         float jumpSpeed = Mathf.Sqrt(-2f * Physics.gravity.y * jumpHeight);
 
-        // Canceling an already existing vertical velocity prevents sequential jumps to go higher than intended
-        float alignedSpeed = Vector3.Dot(velocity, contactNormal);
-        if (alignedSpeed > 0f) jumpSpeed = Mathf.Max(jumpSpeed - alignedSpeed, 0f);
-        velocity += contactNormal * jumpSpeed;
+        // Adding up vector to the direction so jumps on steep surfaces provide more vertical velocity
+        jumpDirection = (jumpDirection + Vector3.up).normalized;
 
+        // Canceling an already existing vertical velocity prevents sequential jumps to go higher than intended
+        float alignedSpeed = Vector3.Dot(velocity, jumpDirection);
+        if (alignedSpeed > 0f) jumpSpeed = Mathf.Max(jumpSpeed - alignedSpeed, 0f);
+        velocity += jumpDirection * jumpSpeed;
     }
 
     private void EvaluateCollision(Collision collision)
@@ -72,6 +95,11 @@ public class Character : MonoBehaviour
             {
                 groundContactCount++;
                 contactNormal += normal;
+            }
+            else if (normal.y > -0.01f)
+            {
+                steepContactCount++;
+                steepNormal += normal;
             }
         }
     }
@@ -100,10 +128,13 @@ public class Character : MonoBehaviour
 
     private bool SnapToGround()
     {
+        // Only snaps if just leaved the ground without jumping or after two physics steps after jumping
         if (stepsSinceLastGrounded > 1 || stepsSinceLastJumped <= 2) return false;
 
         float speed = velocity.magnitude;
         if (speed > maxSnapSpeed) return false;
+
+        // Try to get the ground plane directly below 
         if (!Physics.Raycast(rb.position, Vector3.down, out RaycastHit hit, probeDistance, probeMask)) return false;
         if (hit.normal.y < GetMinDot(hit.collider.gameObject.layer)) return false;
 
@@ -114,6 +145,19 @@ public class Character : MonoBehaviour
         return true;
     }
 
+    private bool CheckSteepContacts()
+    {
+        if (steepContactCount < 1) return false;
+
+        steepNormal.Normalize();
+        if (steepNormal.y <= minGroundDotProduct) return false;
+
+        // One ground contact represented by the sum of steep normals
+        groundContactCount = 1;
+        contactNormal = steepNormal;
+        return true;        
+    }
+
     private void UpdateState()
     {
         velocity = rb.linearVelocity;
@@ -121,10 +165,12 @@ public class Character : MonoBehaviour
         stepsSinceLastGrounded++;
         stepsSinceLastJumped++;
 
-        if (OnGround || SnapToGround())
+        if (OnGround || SnapToGround() || CheckSteepContacts())
         {
-            jumpPhase = 0;
             stepsSinceLastGrounded = 0;
+
+            // Only reset jump phase at least one physics step after the jump was performed
+            if (stepsSinceLastJumped > 1) jumpPhase = 0;
 
             // Only normalize contact if it is an aggregate
             if (groundContactCount > 1)
@@ -137,8 +183,8 @@ public class Character : MonoBehaviour
 
     private void ClearState()
     {
-        groundContactCount = 0;
-        contactNormal = Vector3.zero;
+        groundContactCount = steepContactCount = 0;
+        contactNormal = steepNormal = Vector3.zero;
     }
 
     private void OnValidate()
@@ -160,8 +206,6 @@ public class Character : MonoBehaviour
 
     private void Update()
     {
-        rend.material.SetColor("_Color", Color.white * (groundContactCount * 0.25f));
-
         desiredVelocity = new Vector3(input.Movement.x, 0f, input.Movement.y) * maxSpeed;
         desiredJump |= input.Jump.WasPressedThisFrame();
     }
