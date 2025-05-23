@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[RequireComponent(typeof(InputManager), typeof(Rigidbody))]
+[RequireComponent(typeof(Rigidbody))]
 public class Character : MonoBehaviour
 {
     [Header("Movement Settings")]
@@ -14,7 +14,7 @@ public class Character : MonoBehaviour
 
     [Header("Jump Settings")]
     [Range(1f, 10f)][SerializeField] private float jumpHeight = 2f;
-    [Range(1, 5)][SerializeField] private int maxAirJumps = 2;
+    [Range(0, 5)][SerializeField] private int maxAirJumps = 2;
 
     [Header("Raycast Settings")]
     [Min(0f)][SerializeField] private float probeDistance = 1f;
@@ -66,10 +66,10 @@ public class Character : MonoBehaviour
         else return Vector3.zero;
     }
 
-    private void Jump()
+    private bool Jump()
     {
         Vector3 jumpDirection = GetJumpDirection();
-        if (jumpDirection == Vector3.zero) return;
+        if (jumpDirection == Vector3.zero) return false;
 
         stepsSinceLastJumped = 0;
         jumpPhase++;
@@ -84,6 +84,7 @@ public class Character : MonoBehaviour
         float alignedSpeed = Vector3.Dot(velocity, jumpDirection);
         if (alignedSpeed > 0f) jumpSpeed = Mathf.Max(jumpSpeed - alignedSpeed, 0f);
         velocity += jumpDirection * jumpSpeed;
+        return true;
     }
 
     private void EvaluateCollision(Collision collision)
@@ -198,7 +199,7 @@ public class Character : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         rend = GetComponent<Renderer>();
 
-        input = GetComponent<InputManager>();
+        input = FindFirstObjectByType<InputManager>();
         input.CreateInputMap();
 
         OnValidate();
@@ -217,8 +218,9 @@ public class Character : MonoBehaviour
 
         if (desiredJump)
         {
-            desiredJump = false;
-            Jump();
+            bool performedJump = Jump();
+            // Keep the desired to jump if the jump wasn't performed and the button press happend late
+            desiredJump = !performedJump && stepsSinceLastJumped > 50;
         }
         rb.linearVelocity = velocity;
 
