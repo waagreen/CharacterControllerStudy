@@ -10,7 +10,7 @@ public class Character : MonoBehaviour
     [Range(0f, 100f)][SerializeField] private float maxAirAcceleration = 1f;
     [Range(0f, 90f)][SerializeField] private float maxGroundAngle = 25f;
     [Range(0f, 90f)][SerializeField] private float maxStairAngle = 46f;
-
+    [SerializeField] private Transform playerInputSpate;
 
     [Header("Jump Settings")]
     [Range(1f, 10f)][SerializeField] private float jumpHeight = 2f;
@@ -188,6 +188,23 @@ public class Character : MonoBehaviour
         contactNormal = steepNormal = Vector3.zero;
     }
 
+    private void SetDesiredVelocity()
+    {
+        if (playerInputSpate)
+        {
+            Vector3 right = playerInputSpate.right;
+            right.y = 0;
+            right.Normalize();
+
+            Vector3 forward = playerInputSpate.forward;
+            forward.y = 0;
+            forward.Normalize();
+
+            desiredVelocity = (forward * input.Movement.y + right * input.Movement.x) * maxSpeed;
+        }
+        else desiredVelocity = new Vector3(input.Movement.x, 0f, input.Movement.y) * maxSpeed;
+    }
+
     private void OnValidate()
     {
         minGroundDotProduct = Mathf.Cos(maxGroundAngle * Mathf.Deg2Rad);
@@ -207,7 +224,7 @@ public class Character : MonoBehaviour
 
     private void Update()
     {
-        desiredVelocity = new Vector3(input.Movement.x, 0f, input.Movement.y) * maxSpeed;
+        SetDesiredVelocity();
         desiredJump |= input.Jump.WasPressedThisFrame();
     }
 

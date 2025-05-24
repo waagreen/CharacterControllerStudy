@@ -873,6 +873,10 @@ PrefabInstance:
       propertyPath: maxAirJumps
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1996056126353008822, guid: 22c1865e22b66084bbebfc93f3893adc, type: 3}
+      propertyPath: playerInputSpate
+      value: 
+      objectReference: {fileID: 409787527}
     - target: {fileID: 8218841183602866181, guid: 22c1865e22b66084bbebfc93f3893adc, type: 3}
       propertyPath: m_Name
       value: Character
