@@ -12,15 +12,18 @@ public class OrbitCamera : MonoBehaviour
     [Range(-89f, 89f)][SerializeField] private float minVerticalAngle = -30f, maxVerticalAngle = 60f;
     [Min(0f)][SerializeField] private float alignDelay = 5f;
     [Range(0f, 90f)][SerializeField] private float alignSmoothRange = 45f;
+    [SerializeField] private LayerMask obstructionMask = -1;
 
     private const float e = 0.001f;
     private const float kMinAutoAlignMagnitude = 0.0001f;
 
     // Assigned on awake (don't change)
     private InputManager input;
+    private Camera regularCamera;
 
     // Runtime variables
     private Vector3 focusPoint, previousFocusPoint = Vector3.zero;
+    private Vector3 cameraHalfExtends;
     private Vector2 orbitAngles = new(45f, 0f); // Starts looking 45f degrees down in the x axis
     private float lastManualRotationTime;
 
@@ -28,6 +31,17 @@ public class OrbitCamera : MonoBehaviour
     {
         float angle = Mathf.Acos(direction.y) * Mathf.Rad2Deg;
         return direction.x < 0f ? 360f - angle : angle; 
+    }
+
+    private Vector3 CalculateHalfExtends()
+    {
+        Vector3 halfExtends;
+
+        halfExtends.x = regularCamera.nearClipPlane * Mathf.Tan(0.5f * Mathf.Deg2Rad * regularCamera.fieldOfView);
+        halfExtends.y = halfExtends.x * regularCamera.aspect;
+        halfExtends.z = 0f;
+
+        return halfExtends;
     }
 
     private void ConstrainAngles()
@@ -119,8 +133,12 @@ public class OrbitCamera : MonoBehaviour
     private void Awake()
     {
         input = FindFirstObjectByType<InputManager>();
+        regularCamera = GetComponent<Camera>();
+
         focusPoint = focus.position;
         transform.localRotation = Quaternion.Euler(orbitAngles);
+
+        cameraHalfExtends = CalculateHalfExtends();
     }
 
     private void LateUpdate()
@@ -137,6 +155,22 @@ public class OrbitCamera : MonoBehaviour
 
         Vector3 lookDirection = lookRotation * Vector3.forward;
         Vector3 lookPosition = focusPoint - lookDirection * distance;
+
+        // Calculate vectors to box cast from ideal focus point
+        Vector3 rectOffset = lookDirection * regularCamera.nearClipPlane;
+        Vector3 rectPositon = lookPosition + rectOffset;
+        Vector3 castFrom = focus.position;
+        Vector3 castLine = rectPositon - castFrom;
+        float castDistance = castLine.magnitude;
+        Vector3 castDirection = castLine / castDistance;
+
+        // Pull camera closer if some geometry is detected between the camera's near plane and focal point
+        if (Physics.BoxCast(castFrom, cameraHalfExtends, castDirection, out RaycastHit hit, lookRotation, castDistance, obstructionMask))
+        {
+            rectPositon = castFrom + castDirection * hit.distance;
+            lookPosition = rectPositon - rectOffset;
+        }
+
         transform.SetPositionAndRotation(lookPosition, lookRotation);
     }
 }

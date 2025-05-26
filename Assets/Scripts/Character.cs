@@ -10,7 +10,7 @@ public class Character : MonoBehaviour
     [Range(0f, 100f)][SerializeField] private float maxAirAcceleration = 1f;
     [Range(0f, 90f)][SerializeField] private float maxGroundAngle = 25f;
     [Range(0f, 90f)][SerializeField] private float maxStairAngle = 46f;
-    [SerializeField] private Transform playerInputSpate;
+    [SerializeField] private Transform playerInputSpace;
 
     [Header("Jump Settings")]
     [Range(1f, 10f)][SerializeField] private float jumpHeight = 2f;
@@ -190,13 +190,13 @@ public class Character : MonoBehaviour
 
     private void SetDesiredVelocity()
     {
-        if (playerInputSpate)
+        if (playerInputSpace)
         {
-            Vector3 right = playerInputSpate.right;
+            Vector3 right = playerInputSpace.right;
             right.y = 0;
             right.Normalize();
 
-            Vector3 forward = playerInputSpate.forward;
+            Vector3 forward = playerInputSpace.forward;
             forward.y = 0;
             forward.Normalize();
 
