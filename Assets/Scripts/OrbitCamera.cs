@@ -25,6 +25,8 @@ public class OrbitCamera : MonoBehaviour
     private Vector3 focusPoint, previousFocusPoint = Vector3.zero;
     private Vector3 cameraHalfExtends;
     private Vector2 orbitAngles = new(45f, 0f); // Starts looking 45f degrees down in the x axis
+    private Quaternion gravityAlignment = Quaternion.identity;
+    private Quaternion orbitRotation;
     private float lastManualRotationTime;
 
     private float GetAngle(Vector2 direction)
@@ -55,7 +57,7 @@ public class OrbitCamera : MonoBehaviour
 
     private bool ManualRotation()
     {
-        Vector2 direction = new(input.Look.y, input.Look.x);
+        Vector2 direction = new(-input.Look.y, input.Look.x);
 
         if (Mathf.Abs(direction.x) > e || Mathf.Abs(direction.y) > e)
         {
@@ -72,7 +74,9 @@ public class OrbitCamera : MonoBehaviour
         if (Time.unscaledTime - lastManualRotationTime < alignDelay) return false;
         else
         {
-            Vector2 movement = new(focusPoint.x - previousFocusPoint.x, focusPoint.z - previousFocusPoint.z);
+            Vector3 alignedDelta = Quaternion.Inverse(gravityAlignment) * (focusPoint - previousFocusPoint);
+
+            Vector2 movement = new(alignedDelta.x, alignedDelta.z);
             float movementDeltaSqr = movement.sqrMagnitude;
 
             // Ignore insignificant movements
@@ -122,6 +126,12 @@ public class OrbitCamera : MonoBehaviour
         else focusPoint = targetPoint;
     }
 
+    private void SetGravityAlignment()
+    {
+        Quaternion newAlignment = Quaternion.FromToRotation(gravityAlignment * Vector3.up, -Physics.gravity.normalized);
+        gravityAlignment = newAlignment * gravityAlignment;
+    }
+
     private void OnValidate()
     {
         if (maxVerticalAngle < minVerticalAngle)
@@ -136,23 +146,24 @@ public class OrbitCamera : MonoBehaviour
         regularCamera = GetComponent<Camera>();
 
         focusPoint = focus.position;
-        transform.localRotation = Quaternion.Euler(orbitAngles);
+        transform.localRotation = orbitRotation = Quaternion.Euler(orbitAngles);
 
         cameraHalfExtends = CalculateHalfExtends();
     }
 
     private void LateUpdate()
     {
+        SetGravityAlignment();
         UpdateFocusPoint();
 
-        Quaternion lookRotation;
         if (ManualRotation() || AutomaticRotation())
         {
             ConstrainAngles();
-            lookRotation = Quaternion.Euler(orbitAngles);
+            orbitRotation = Quaternion.Euler(orbitAngles);
         }
-        else lookRotation = transform.localRotation;
 
+        // Look rotation is always relative to the current gravity plane
+        Quaternion lookRotation = gravityAlignment * orbitRotation;
         Vector3 lookDirection = lookRotation * Vector3.forward;
         Vector3 lookPosition = focusPoint - lookDirection * distance;
 
@@ -164,7 +175,7 @@ public class OrbitCamera : MonoBehaviour
         float castDistance = castLine.magnitude;
         Vector3 castDirection = castLine / castDistance;
 
-        // Pull camera closer if some geometry is detected between the camera's near plane and focal point
+        // Reposition if some geometry is detected between the camera's near plane and focal point
         if (Physics.BoxCast(castFrom, cameraHalfExtends, castDirection, out RaycastHit hit, lookRotation, castDistance, obstructionMask))
         {
             rectPositon = castFrom + castDirection * hit.distance;

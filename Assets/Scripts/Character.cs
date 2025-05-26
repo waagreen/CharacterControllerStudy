@@ -29,6 +29,7 @@ public class Character : MonoBehaviour
     // Runtime variables
     private Vector3 velocity, desiredVelocity = Vector3.zero;
     private Vector3 contactNormal, steepNormal = Vector3.zero;
+    private Vector3 upAxis, rightAxis, forwardAxis;
     private bool desiredJump = false;
     private int jumpPhase = 0;
     private int groundContactCount, steepContactCount = 0;
@@ -60,13 +61,13 @@ public class Character : MonoBehaviour
         else if ((maxAirJumps > 0) && (jumpPhase <= maxAirJumps))
         {
             if (jumpPhase == 0) jumpPhase = 1;
-            //In this case contactNormal was already set to Vector3.Up
+            //In this case contactNormal was already set to the up axis
             return contactNormal;
         }
         else return Vector3.zero;
     }
 
-    private bool Jump()
+    private bool Jump(Vector3 gravity)
     {
         Vector3 jumpDirection = GetJumpDirection();
         if (jumpDirection == Vector3.zero) return false;
@@ -75,10 +76,10 @@ public class Character : MonoBehaviour
         jumpPhase++;
 
         // Jump speed overcoming gravity formula
-        float jumpSpeed = Mathf.Sqrt(-2f * Physics.gravity.y * jumpHeight);
+        float jumpSpeed = Mathf.Sqrt(2f * gravity.magnitude * jumpHeight);
 
-        // Adding up vector to the direction so jumps on steep surfaces provide more vertical velocity
-        jumpDirection = (jumpDirection + Vector3.up).normalized;
+        // Adding up axis vector to the direction so jumps on steep surfaces provide more vertical velocity
+        jumpDirection = (jumpDirection + upAxis).normalized;
 
         // Canceling an already existing vertical velocity prevents sequential jumps to go higher than intended
         float alignedSpeed = Vector3.Dot(velocity, jumpDirection);
@@ -92,12 +93,13 @@ public class Character : MonoBehaviour
         for (int i = 0; i < collision.contactCount; i++)
         {
             Vector3 normal = collision.GetContact(i).normal;
-            if (normal.y >= GetMinDot(collision.gameObject.layer))
+            float upDot = Vector3.Dot(upAxis, normal);
+            if (upDot >= GetMinDot(collision.gameObject.layer))
             {
                 groundContactCount++;
                 contactNormal += normal;
             }
-            else if (normal.y > -0.01f)
+            else if (upDot > -0.01f)
             {
                 steepContactCount++;
                 steepNormal += normal;
@@ -105,15 +107,15 @@ public class Character : MonoBehaviour
         }
     }
 
-    private Vector3 ProjectOnContactPlane(Vector3 vector)
+    private Vector3 ProjectOnPlane(Vector3 direction, Vector3 normal)
     {
-        return vector - contactNormal * Vector3.Dot(vector, contactNormal);
+        return (direction - normal * Vector3.Dot(direction, normal)).normalized;
     }
 
     private void AdjustVelocity()
     {
-        Vector3 xAxis = ProjectOnContactPlane(Vector3.right).normalized;
-        Vector3 zAxis = ProjectOnContactPlane(Vector3.forward).normalized;
+        Vector3 xAxis = ProjectOnPlane(rightAxis, contactNormal);
+        Vector3 zAxis = ProjectOnPlane(forwardAxis, contactNormal);
 
         float currentX = Vector3.Dot(velocity, xAxis);
         float currentZ = Vector3.Dot(velocity, zAxis);
@@ -136,8 +138,10 @@ public class Character : MonoBehaviour
         if (speed > maxSnapSpeed) return false;
 
         // Try to get the ground plane directly below 
-        if (!Physics.Raycast(rb.position, Vector3.down, out RaycastHit hit, probeDistance, probeMask)) return false;
-        if (hit.normal.y < GetMinDot(hit.collider.gameObject.layer)) return false;
+        if (!Physics.Raycast(rb.position, -upAxis, out RaycastHit hit, probeDistance, probeMask)) return false;
+
+        float upDot = Vector3.Dot(upAxis, hit.normal);
+        if (upDot < GetMinDot(hit.collider.gameObject.layer)) return false;
 
         groundContactCount = 1;
         contactNormal = hit.normal;
@@ -150,11 +154,12 @@ public class Character : MonoBehaviour
     {
         if (steepContactCount < 1) return false;
 
-        steepNormal.Normalize();
-        if (steepNormal.y <= minGroundDotProduct) return false;
+        float upDot = Vector3.Dot(upAxis, contactNormal);
+        if (upDot < minGroundDotProduct) return false;
 
         // One ground contact represented by the sum of steep normals
         groundContactCount = 1;
+        steepNormal.Normalize();
         contactNormal = steepNormal;
         return true;        
     }
@@ -179,7 +184,7 @@ public class Character : MonoBehaviour
                 contactNormal.Normalize();
             }
         }
-        else contactNormal = Vector3.up;
+        else contactNormal = upAxis;
     }
 
     private void ClearState()
@@ -190,19 +195,19 @@ public class Character : MonoBehaviour
 
     private void SetDesiredVelocity()
     {
+        // Project axis on gravity plane 
         if (playerInputSpace)
         {
-            Vector3 right = playerInputSpace.right;
-            right.y = 0;
-            right.Normalize();
-
-            Vector3 forward = playerInputSpace.forward;
-            forward.y = 0;
-            forward.Normalize();
-
-            desiredVelocity = (forward * input.Movement.y + right * input.Movement.x) * maxSpeed;
+            rightAxis = ProjectOnPlane(playerInputSpace.right, upAxis);
+            forwardAxis = ProjectOnPlane(playerInputSpace.forward, upAxis);
         }
-        else desiredVelocity = new Vector3(input.Movement.x, 0f, input.Movement.y) * maxSpeed;
+        else
+        {
+            rightAxis = ProjectOnPlane(Vector3.right, upAxis);
+            forwardAxis = ProjectOnPlane(Vector3.forward, upAxis);
+        }
+
+        desiredVelocity = new Vector3(input.Movement.x, 0f, input.Movement.y) * maxSpeed;
     }
 
     private void OnValidate()
@@ -213,8 +218,10 @@ public class Character : MonoBehaviour
 
     private void Awake()
     {
-        rb = GetComponent<Rigidbody>();
         rend = GetComponent<Renderer>();
+
+        rb = GetComponent<Rigidbody>();
+        rb.useGravity = false;
 
         input = FindFirstObjectByType<InputManager>();
         input.CreateInputMap();
@@ -230,15 +237,19 @@ public class Character : MonoBehaviour
 
     private void FixedUpdate()
     {
+        Vector3 gravity = CustomGravity.GetGravity(rb.position, out upAxis);
+
         UpdateState();
         AdjustVelocity();
 
         if (desiredJump)
         {
-            bool performedJump = Jump();
+            bool performedJump = Jump(gravity);
             // Keep the desired to jump if the jump wasn't performed and the button press happend late
             desiredJump = !performedJump && stepsSinceLastJumped > 50;
         }
+
+        velocity += gravity * Time.deltaTime;        
         rb.linearVelocity = velocity;
 
         ClearState();
