@@ -4,17 +4,20 @@ public static class CustomGravity
 {
     public static Vector3 GetGravity(Vector3 position)
     {
-        return Physics.gravity;
+		Vector3 up = position.normalized;
+		return up * Physics.gravity.y;
     }
 
     public static Vector3 GetGravity(Vector3 position, out Vector3 upAxis)
     {
-        upAxis = -Physics.gravity.normalized;
-        return Physics.gravity;
+		Vector3 up = position.normalized;
+		upAxis = Physics.gravity.y < 0f ? up : -up;
+		return up * Physics.gravity.y;
     }
 
     public static Vector3 GetUpAxis(Vector3 position)
     {
-        return -Physics.gravity.normalized;
+		Vector3 up = position.normalized;
+		return Physics.gravity.y < 0f ? up : -up;
     }
 }
