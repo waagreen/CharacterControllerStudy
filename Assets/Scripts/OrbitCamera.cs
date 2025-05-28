@@ -4,13 +4,17 @@ using UnityEngine;
 [RequireComponent(typeof(Camera))]
 public class OrbitCamera : MonoBehaviour
 {
+    [Header("Automatic Movement")]
     [SerializeField] private Transform focus = default;
     [Range(1f, 20f)][SerializeField] private float distance = 5f;
     [Min(0f)][SerializeField] private float focusRadius = 1f;
     [Range(0f, 1f)][SerializeField] private float focusCentering = 0.5f;
+    [Min(0f)][SerializeField] private float alignDelay = 5f;
+    [Min(0f)][SerializeField] private float upAlignmentSpeed = 360f;
+
+    [Header("Manual movement")]
     [Range(1f, 360f)][SerializeField] private float rotationSpeed = 90f;
     [Range(-89f, 89f)][SerializeField] private float minVerticalAngle = -30f, maxVerticalAngle = 60f;
-    [Min(0f)][SerializeField] private float alignDelay = 5f;
     [Range(0f, 90f)][SerializeField] private float alignSmoothRange = 45f;
     [SerializeField] private LayerMask obstructionMask = -1;
 
@@ -133,8 +137,23 @@ public class OrbitCamera : MonoBehaviour
 
     private void SetGravityAlignment()
     {
-        Quaternion newAlignment = Quaternion.FromToRotation(gravityAlignment * Vector3.up, -Physics.gravity.normalized);
-        gravityAlignment = newAlignment * gravityAlignment;
+        Vector3 fromUp = gravityAlignment * Vector3.up;
+        Vector3 toUp = CustomGravity.GetUpAxis(focusPoint);
+
+        Quaternion newAlignment = Quaternion.FromToRotation(fromUp, toUp) * gravityAlignment;
+
+        float dot = Mathf.Clamp(Vector3.Dot(fromUp, toUp), -1f, 1f);
+        float angle = Mathf.Acos(dot) * Mathf.Rad2Deg;
+        float maxAngle = upAlignmentSpeed * Time.deltaTime;
+
+        if (angle <= maxAngle)
+        {
+            gravityAlignment = newAlignment;
+        }
+        else
+        {
+            gravityAlignment = Quaternion.SlerpUnclamped(gravityAlignment, newAlignment, maxAngle / angle);
+        }   
     }
 
     private void OnValidate()
