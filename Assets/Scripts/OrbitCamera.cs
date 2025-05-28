@@ -57,6 +57,7 @@ public class OrbitCamera : MonoBehaviour
 
     private bool ManualRotation()
     {
+        // Invert the horizontal axis for a more natural right stick movement
         Vector2 direction = new(-input.Look.y, input.Look.x);
 
         if (Mathf.Abs(direction.x) > e || Mathf.Abs(direction.y) > e)
@@ -76,13 +77,16 @@ public class OrbitCamera : MonoBehaviour
         {
             Vector3 alignedDelta = Quaternion.Inverse(gravityAlignment) * (focusPoint - previousFocusPoint);
 
+            // Automatic rotation is bound to the XZ gravity plane
             Vector2 movement = new(alignedDelta.x, alignedDelta.z);
             float movementDeltaSqr = movement.sqrMagnitude;
 
             // Ignore insignificant movements
             if (movementDeltaSqr < kMinAutoAlignMagnitude) return false;
 
+            // Doing the movement normalization by hand since we already have the sqrMagnitude
             float headingAngle = GetAngle(movement / Mathf.Sqrt(movementDeltaSqr));
+
             float deltaAbs = Mathf.Abs(Mathf.DeltaAngle(orbitAngles.y, headingAngle));
             float turnOverDelta = 180f - deltaAbs;
             float rotationChange = rotationSpeed * Mathf.Min(Time.unscaledDeltaTime, movementDeltaSqr);
@@ -109,6 +113,7 @@ public class OrbitCamera : MonoBehaviour
 
         if (focusRadius > 0f)
         {
+            // Calculate t for a smooth ease out follow
             float distance = Vector3.Distance(targetPoint, focusPoint);
             float t = 1f;
 

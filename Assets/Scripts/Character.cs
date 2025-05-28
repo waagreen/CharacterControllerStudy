@@ -175,7 +175,7 @@ public class Character : MonoBehaviour
         {
             stepsSinceLastGrounded = 0;
 
-            // Only reset jump phase at least one physics step after the jump was performed
+            // Only reset jump phase if at least one physics step after the jump was performed
             if (stepsSinceLastJumped > 1) jumpPhase = 0;
 
             // Only normalize contact if it is an aggregate
@@ -212,6 +212,7 @@ public class Character : MonoBehaviour
 
     private void OnValidate()
     {
+        // Convert angles to radians and get their cosine to compare with normal vector
         minGroundDotProduct = Mathf.Cos(maxGroundAngle * Mathf.Deg2Rad);
         minStairDotProduct = Mathf.Cos(maxStairAngle * Mathf.Deg2Rad);
     }
