@@ -4,21 +4,27 @@ public class GravitySphere : GravitySource
 {
     [SerializeField] private float gravity = 9.81f;
     [Min(0f)][SerializeField] private float outerRadius = 10f, outerFalloffRadius = 15f;
+    [Min(0f)][SerializeField] private float innerRadius = 5f, innerFalloffRadius = 1f;
 
-    private float outerFalloffFactor;
+
+    private float outerFalloffFactor, innerFalloffFactor;
 
     public override Vector3 GetGravity(Vector3 position)
     {
         Vector3 up = transform.position - position;
 
         float distance = up.magnitude;
-        if (distance > outerFalloffRadius) return Vector3.zero;
+        if (distance > outerFalloffRadius || distance < innerFalloffRadius) return Vector3.zero;
 
-        // Outer radius indicate the space where gravity is constant
+        // Outer and inner radii indicates the space where gravity is constant
         float g = gravity / distance;
         if (distance > outerRadius)
         {
             g *= 1f - (distance - outerRadius) * outerFalloffFactor;
+        }
+        else if (distance < innerRadius)
+        {
+            g *= 1f - (innerRadius - distance) * innerFalloffRadius;
         }
 
         return g * up;
@@ -31,7 +37,12 @@ public class GravitySphere : GravitySource
 
     private void OnValidate()
     {
-        outerFalloffRadius = Mathf.Max(outerFalloffRadius, outerRadius);
+        innerFalloffFactor = Mathf.Max(innerFalloffRadius, 0f); // Smallest radii around the sphere center
+        innerRadius = Mathf.Max(innerRadius, innerFalloffRadius);
+        outerRadius = Mathf.Max(innerRadius, outerRadius);
+        outerFalloffRadius = Mathf.Max(outerFalloffRadius, outerRadius); // Biggest raddi around the "atmosphere"
+
+        innerFalloffFactor = 1f / (innerRadius - innerFalloffRadius);
         outerFalloffFactor = 1f / (outerFalloffRadius - outerRadius);
     }
 
@@ -41,10 +52,10 @@ public class GravitySphere : GravitySource
 
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(p, outerRadius);
-
-        if (outerRadius > outerFalloffRadius) return;
+        if (innerRadius > 0f && outerRadius > innerRadius) Gizmos.DrawWireSphere(p, innerRadius);
 
         Gizmos.color = Color.cyan;
-        Gizmos.DrawWireSphere(p, outerFalloffRadius);
+        if (outerRadius < outerFalloffRadius) Gizmos.DrawWireSphere(p, outerFalloffRadius);
+        if (innerFalloffRadius > 0f && innerRadius > innerFalloffRadius) Gizmos.DrawWireSphere(p, innerFalloffRadius);
     }
 }
