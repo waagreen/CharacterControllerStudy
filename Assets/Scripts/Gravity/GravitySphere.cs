@@ -11,10 +11,10 @@ public class GravitySphere : GravitySource
 
     public override Vector3 GetGravity(Vector3 position)
     {
-        Vector3 up = transform.position - position;
+        Vector3 vector = transform.position - position;
 
-        float distance = up.magnitude;
-        if (distance > outerFalloffRadius || distance < innerFalloffRadius) return Vector3.zero;
+        float distance = vector.magnitude;
+        if ((distance > outerFalloffRadius) || (distance < innerFalloffRadius)) return Vector3.zero;
 
         // Outer and inner radii indicates the space where gravity is constant
         float g = force / distance;
@@ -27,7 +27,7 @@ public class GravitySphere : GravitySource
             g *= 1f - (innerRadius - distance) * innerFalloffFactor;
         }
 
-        return g * up;
+        return g * vector;
     }
 
     private void Awake()
