@@ -1621,7 +1621,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8867818921454533037, guid: 22c1865e22b66084bbebfc93f3893adc, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.5
+      value: -9.5
       objectReference: {fileID: 0}
     - target: {fileID: 8867818921454533037, guid: 22c1865e22b66084bbebfc93f3893adc, type: 3}
       propertyPath: m_LocalPosition.z
@@ -2595,12 +2595,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   focus: {fileID: 1107600173}
-  distance: 8
+  distance: 8.5
   focusRadius: 0.5
   focusCentering: 0.4
   alignDelay: 1
-  upAlignmentSpeed: 270
-  rotationSpeed: 180
+  upAlignmentSpeed: 180
+  rotationSpeed: 270
   minVerticalAngle: 5
   maxVerticalAngle: 30
   alignSmoothRange: 45
@@ -3047,9 +3047,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   force: 9.81
-  boundaryDistance: {x: 10.1, y: 10.1, z: 10.1}
+  constrainProportions: 1
+  boundaryDistance: {x: 9.91, y: 9.91, z: 9.91}
   innerDistance: 2
-  innerFalloffDistance: 5.78
+  innerFalloffDistance: 5
+  outerDistance: 2
+  outerFalloffDistance: 4
 --- !u!1 &985261087
 GameObject:
   m_ObjectHideFlags: 0
