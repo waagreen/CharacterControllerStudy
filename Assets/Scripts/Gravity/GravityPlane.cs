@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class GravityPlane : GravitySource
 {
-    [SerializeField] private float gravity = 9.81f;
+    [SerializeField] private float force = 9.81f;
     [Min(0f)][SerializeField] private float range = 1f;
     [SerializeField] private Vector2 gravityInfluenceArea = Vector2.one;
 
@@ -13,7 +13,7 @@ public class GravityPlane : GravitySource
         float distance = Vector3.Dot(up, position - transform.position);
         if (distance > range) return Vector3.zero;
 
-        float g = gravity;
+        float g = force;
         if (distance > 0f)
         {
             g *= 1f - distance / range;

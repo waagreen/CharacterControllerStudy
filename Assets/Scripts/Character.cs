@@ -78,27 +78,32 @@ public class Character : MonoBehaviour
         // Jump speed overcoming gravity formula
         float jumpSpeed = Mathf.Sqrt(2f * gravity.magnitude * jumpHeight);
 
-        // Adding up axis vector to the direction so jumps on steep surfaces provide more vertical velocity
+        // Adding up axis vector to the direction so jumping on steep surfaces provides more vertical velocity
         jumpDirection = (jumpDirection + upAxis).normalized;
 
         // Canceling an already existing vertical velocity prevents sequential jumps to go higher than intended
         float alignedSpeed = Vector3.Dot(velocity, jumpDirection);
         if (alignedSpeed > 0f) jumpSpeed = Mathf.Max(jumpSpeed - alignedSpeed, 0f);
+
         velocity += jumpDirection * jumpSpeed;
         return true;
     }
 
     private void EvaluateCollision(Collision collision)
     {
+        float minDot = GetMinDot(collision.gameObject.layer);
         for (int i = 0; i < collision.contactCount; i++)
         {
             Vector3 normal = collision.GetContact(i).normal;
             float upDot = Vector3.Dot(upAxis, normal);
-            if (upDot >= GetMinDot(collision.gameObject.layer))
+
+            // Surface angle is less than what was stablished in maxGroundAngle, so it's ground.
+            if (upDot >= minDot)
             {
                 groundContactCount++;
                 contactNormal += normal;
             }
+            // Surface angles is between 100º and the maxGroundAngle, so it's steep.
             else if (upDot > -0.01f)
             {
                 steepContactCount++;
@@ -143,10 +148,14 @@ public class Character : MonoBehaviour
         float upDot = Vector3.Dot(upAxis, hit.normal);
         if (upDot < GetMinDot(hit.collider.gameObject.layer)) return false;
 
+        // If all checks succeed, then we found a valid surface to snap
         groundContactCount = 1;
         contactNormal = hit.normal;
+
+        // Align current velocity with the new surface
         float dot = Vector3.Dot(velocity, contactNormal);
         if (dot > 0f) velocity = (velocity - contactNormal * dot).normalized * speed;
+
         return true;
     }
 
@@ -154,14 +163,17 @@ public class Character : MonoBehaviour
     {
         if (steepContactCount < 1) return false;
 
-        float upDot = Vector3.Dot(upAxis, contactNormal);
-        if (upDot < minGroundDotProduct) return false;
+        float upDot = Vector3.Dot(upAxis, steepNormal);
+        if (upDot >= minGroundDotProduct)
+        {
+            // One ground contact represented by the sum of all steep normals
+            groundContactCount = 1;
+            steepNormal.Normalize();
+            contactNormal = steepNormal;
+            return true;
+        }
 
-        // One ground contact represented by the sum of steep normals
-        groundContactCount = 1;
-        steepNormal.Normalize();
-        contactNormal = steepNormal;
-        return true;        
+        return false;
     }
 
     private void UpdateState()
@@ -175,7 +187,7 @@ public class Character : MonoBehaviour
         {
             stepsSinceLastGrounded = 0;
 
-            // Only reset jump phase if at least one physics step after the jump was performed
+            // Only reset jump phase if at least one physics step was performed after the jump
             if (stepsSinceLastJumped > 1) jumpPhase = 0;
 
             // Only normalize contact if it is an aggregate
@@ -213,6 +225,7 @@ public class Character : MonoBehaviour
     private void OnValidate()
     {
         // Convert angles to radians and get their cosine to compare with normal vector
+        // As a surface aproaches 90º this value gets closer to zero.
         minGroundDotProduct = Mathf.Cos(maxGroundAngle * Mathf.Deg2Rad);
         minStairDotProduct = Mathf.Cos(maxStairAngle * Mathf.Deg2Rad);
     }
@@ -238,6 +251,7 @@ public class Character : MonoBehaviour
 
     private void FixedUpdate()
     {
+        // Up axis is always defined as the opposite of the current gravity vector
         Vector3 gravity = CustomGravity.GetGravity(rb.position, out upAxis);
 
         UpdateState();

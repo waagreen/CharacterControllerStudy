@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class GravitySphere : GravitySource
 {
-    [SerializeField] private float gravity = 9.81f;
+    [SerializeField] private float force = 9.81f;
     [Min(0f)][SerializeField] private float outerRadius = 10f, outerFalloffRadius = 15f;
     [Min(0f)][SerializeField] private float innerRadius = 5f, innerFalloffRadius = 1f;
 
@@ -17,14 +17,14 @@ public class GravitySphere : GravitySource
         if (distance > outerFalloffRadius || distance < innerFalloffRadius) return Vector3.zero;
 
         // Outer and inner radii indicates the space where gravity is constant
-        float g = gravity / distance;
+        float g = force / distance;
         if (distance > outerRadius)
         {
             g *= 1f - (distance - outerRadius) * outerFalloffFactor;
         }
         else if (distance < innerRadius)
         {
-            g *= 1f - (innerRadius - distance) * innerFalloffRadius;
+            g *= 1f - (innerRadius - distance) * innerFalloffFactor;
         }
 
         return g * up;
@@ -40,7 +40,7 @@ public class GravitySphere : GravitySource
         innerFalloffFactor = Mathf.Max(innerFalloffRadius, 0f); // Smallest radii around the sphere center
         innerRadius = Mathf.Max(innerRadius, innerFalloffRadius);
         outerRadius = Mathf.Max(innerRadius, outerRadius);
-        outerFalloffRadius = Mathf.Max(outerFalloffRadius, outerRadius); // Biggest raddi around the "atmosphere"
+        outerFalloffRadius = Mathf.Max(outerFalloffRadius, outerRadius); // Biggest raddi, the "atmosphere"
 
         innerFalloffFactor = 1f / (innerRadius - innerFalloffRadius);
         outerFalloffFactor = 1f / (outerFalloffRadius - outerRadius);
