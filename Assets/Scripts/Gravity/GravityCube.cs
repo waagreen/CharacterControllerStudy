@@ -61,7 +61,7 @@ public class GravityCube : GravitySource
             g *= 1f - (distance - innerDistance) * innerFalloffFactor;
         }
 
-        return coordinate > 0f ? g : -g;
+        return coordinate < 0f ? -g : g;
     }
 
     private Vector3 TryToAdjustOutsideBoundsVector(Vector3 position, out int outsideCount)
@@ -73,12 +73,12 @@ public class GravityCube : GravitySource
         if (position.x > boundaryDistance.x)
         {
             vector.x = boundaryDistance.x - position.x;
-            outsideCount = 1;
+            outsideCount++;
         }
         else if (position.x < -boundaryDistance.x)
         {
             vector.x = -boundaryDistance.x - position.x;
-            outsideCount = 1;
+            outsideCount++;
         }
 
         // Y-Bounds
@@ -112,18 +112,19 @@ public class GravityCube : GravitySource
     {
         position = transform.InverseTransformDirection(position - transform.position);
 
+        // While going beyond the outside constant gravity range, treat the force as if we were on a sphere 
         Vector3 vector = TryToAdjustOutsideBoundsVector(position, out int outsideCount);
         if (outsideCount > 0)
         {
 			float distance = vector.magnitude;
-			if (distance > outerFalloffDistance) {
-				return Vector3.zero;
-			}
-			float g = force / distance;
-			if (distance > outerDistance) {
+			if (distance > outerFalloffDistance) return Vector3.zero;
+
+            float g = force / distance;
+			if (distance > outerDistance)
+            {
 				g *= 1f - (distance - outerDistance) * outerFalloffFactor;
 			}
-			return transform.TransformDirection(g * vector);;
+			return transform.TransformDirection(g * vector);
         }
 
         Vector3 distances;
@@ -132,9 +133,7 @@ public class GravityCube : GravitySource
         distances.z = boundaryDistance.z - Mathf.Abs(position.z);
 
         // Gravity force relative to the nearest face
-        int smallestFlag = CheckSmallestDistance(distances);
-
-        switch (smallestFlag)
+        switch (CheckSmallestDistance(distances))
         {
             case 0:
                 vector.x = GetGravityComponent(position.x, distances.x);
@@ -176,13 +175,13 @@ public class GravityCube : GravitySource
         Vector3 center = Vector3.zero;
         center[axis] = (boundaryDistance[axis] + distance) * direction;
         
-        Vector3 size = 2f * boundaryDistance;
+        Vector3 halfSize = boundaryDistance;
+        Vector3 size = 2f * halfSize;
         size[axis] = 0f;
         
         int axis1 = (axis + 1) % 3;
         int axis2 = (axis + 2) % 3;
         
-        Vector3 halfSize = size * 0.5f;
         Vector3 a = center, b = center, c = center, d = center;
         a[axis1] += halfSize[axis1]; a[axis2] += halfSize[axis2];
         b[axis1] += halfSize[axis1]; b[axis2] -= halfSize[axis2];
