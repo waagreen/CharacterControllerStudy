@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -9,7 +8,6 @@ public class TransformPath : MonoBehaviour
 
     protected int waypointIndex;
     protected int direction;
-    private List<Transform> points;
 
     private void OnValidate()
     {
@@ -22,20 +20,17 @@ public class TransformPath : MonoBehaviour
         OnValidate();
 
         waypointIndex = initialPoint - 1;
-
-        points = new();
-        foreach (Transform child in transform) points.Add(child);
     }
 
-    public Vector3 GetCurrentPoint()
+    public Transform GetCurrentPoint()
     {
-        return points[waypointIndex].position;
+        return transform.GetChild(waypointIndex);
     }
 
-    public Vector3 GetNextPoint()
+    public Transform GetNextPoint()
     {
         int next = waypointIndex + direction;
-        if ((next >= points.Count) || (next < 0))
+        if ((next >= transform.childCount) || (next < 0))
         {
             direction *= -1;
         }
@@ -47,8 +42,6 @@ public class TransformPath : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
-        if (points == null) return;
-
         int order = 1;
         GUIStyle style = new()
         {
@@ -58,7 +51,7 @@ public class TransformPath : MonoBehaviour
             richText = true
         };
 
-        foreach (Transform child in points)
+        foreach (Transform child in transform)
         {
             if (child == null) continue;
             Gizmos.color = (order != initialPoint) ? Color.magenta : Color.yellow;

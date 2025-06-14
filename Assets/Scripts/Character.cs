@@ -27,9 +27,11 @@ public class Character : MonoBehaviour
     private Renderer rend;
 
     // Runtime variables
-    private Vector3 velocity, desiredVelocity = Vector3.zero;
+    private Rigidbody connectedBody, previousConnectedBody;
+    private Vector3 velocity, desiredVelocity, connectionVelocity = Vector3.zero;
     private Vector3 contactNormal, steepNormal = Vector3.zero;
     private Vector3 upAxis, rightAxis, forwardAxis;
+    private Vector3 connectionWorldPosition, connectionLocalPosition;
     private bool desiredJump = false;
     private int jumpPhase = 0;
     private int groundContactCount, steepContactCount = 0;
@@ -102,12 +104,17 @@ public class Character : MonoBehaviour
             {
                 groundContactCount++;
                 contactNormal += normal;
+                connectedBody = collision.rigidbody;
             }
             // Surface angles is between 100º and the maxGroundAngle, so it's steep.
             else if (upDot > -0.01f)
             {
                 steepContactCount++;
                 steepNormal += normal;
+                if (groundContactCount < 1)
+                {
+                    connectedBody = collision.rigidbody;
+                }
             }
         }
     }
@@ -122,8 +129,9 @@ public class Character : MonoBehaviour
         Vector3 xAxis = ProjectOnPlane(rightAxis, contactNormal);
         Vector3 zAxis = ProjectOnPlane(forwardAxis, contactNormal);
 
-        float currentX = Vector3.Dot(velocity, xAxis);
-        float currentZ = Vector3.Dot(velocity, zAxis);
+        Vector3 relativeVelocity = velocity - connectionVelocity;
+        float currentX = Vector3.Dot(relativeVelocity, xAxis);
+        float currentZ = Vector3.Dot(relativeVelocity, zAxis);
 
         float acceleration = OnGround ? maxAcceleration : maxAirAcceleration;
         float maxSpeedChange = acceleration * Time.deltaTime;
@@ -148,13 +156,14 @@ public class Character : MonoBehaviour
         float upDot = Vector3.Dot(upAxis, hit.normal);
         if (upDot < GetMinDot(hit.collider.gameObject.layer)) return false;
 
-        // If all checks succeed, then we found a valid surface to snap
-        groundContactCount = 1;
-        contactNormal = hit.normal;
-
         // Align current velocity with the new surface
         float dot = Vector3.Dot(velocity, contactNormal);
         if (dot > 0f) velocity = (velocity - contactNormal * dot).normalized * speed;
+
+        // If all checks succeed, then we found a valid surface to snap
+        groundContactCount = 1;
+        contactNormal = hit.normal;
+        connectedBody = hit.rigidbody;
 
         return true;
     }
@@ -174,6 +183,23 @@ public class Character : MonoBehaviour
         }
 
         return false;
+    }
+
+    private void UpdateConnectionState()
+    {
+        if (connectedBody == null) return;
+        if (!connectedBody.isKinematic && connectedBody.mass < rb.mass) return;
+
+        // Only update the connection velocity if are dealing with the same body between physics steps
+        if (connectedBody == previousConnectedBody)
+        {
+            Vector3 connectionMovement = connectedBody.transform.TransformPoint(connectionLocalPosition) - connectionWorldPosition;
+            connectionVelocity = connectionMovement / Time.deltaTime;
+        }
+
+        connectionWorldPosition = rb.position;
+        // Get our current contact position on local space to also take into account rotation
+        connectionLocalPosition = connectedBody.transform.InverseTransformPoint(connectionWorldPosition);
     }
 
     private void UpdateState()
@@ -197,12 +223,16 @@ public class Character : MonoBehaviour
             }
         }
         else contactNormal = upAxis;
+
+        UpdateConnectionState();
     }
 
     private void ClearState()
     {
         groundContactCount = steepContactCount = 0;
-        contactNormal = steepNormal = Vector3.zero;
+        contactNormal = steepNormal = connectionVelocity = Vector3.zero;
+        previousConnectedBody = connectedBody;
+        connectedBody = null;
     }
 
     private void SetDesiredVelocity()
