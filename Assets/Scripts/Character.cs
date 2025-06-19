@@ -34,7 +34,6 @@ public class Character : MonoBehaviour
     private Vector3 contactNormal, steepNormal, climbNormal = Vector3.zero;
     private Vector3 upAxis, rightAxis, forwardAxis;
     private Vector3 connectionWorldPosition, connectionLocalPosition;
-    private Vector2 playerInput;
     private int groundContactCount, steepContactCount, climbContactCount = 0;
     private int stepsSinceLastGrounded, stepsSinceLastJumped = 0;
     private float minGroundDotProduct, minStairDotProduct, minClimbDotProduct = 0f;
@@ -144,10 +143,12 @@ public class Character : MonoBehaviour
         Vector3 xAxis, zAxis;
         float speed, acceleration;
 
-        if (Climbing) // Change orientation when touching a wall
+        if (Climbing) 
         {
             speed = maxClimbSpeed;
             acceleration = maxClimbAcceleration;
+
+            // Change axis orientation when touching a wall
             xAxis = Vector3.Cross(contactNormal, Vector3.up);
             zAxis = Vector3.up;
         }
@@ -164,7 +165,6 @@ public class Character : MonoBehaviour
         float currentZ = Vector3.Dot(relativeVelocity, zAxis);
 
         float maxSpeedChange = acceleration * Time.deltaTime;
-
         float newX = Mathf.MoveTowards(currentX, input.Movement.x * speed, maxSpeedChange);
         float newZ = Mathf.MoveTowards(currentZ, input.Movement.y * speed, maxSpeedChange);
 
