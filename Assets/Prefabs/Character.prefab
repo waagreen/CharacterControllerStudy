@@ -123,22 +123,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 426dbf5e15279be49823f71319a5832a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxSpeed: 6
-  maxSnapSpeed: 7
-  maxAcceleration: 35
-  maxAirAcceleration: 9
+  playerInputSpace: {fileID: 0}
+  maxSpeed: 8
+  maxClimbSpeed: 2
+  maxSnapSpeed: 10.5
+  maxAcceleration: 30
+  maxClimbAcceleration: 70
+  maxAirAcceleration: 6
   maxGroundAngle: 40
   maxStairAngle: 46
-  playerInputSpace: {fileID: 0}
-  jumpHeight: 2
+  maxClimbAngle: 140
+  jumpHeight: 2.5
   maxAirJumps: 1
   probeDistance: 1
   probeMask:
     serializedVersion: 2
-    m_Bits: 1139
+    m_Bits: 3187
   stairMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 1024
+  climbMask:
+    serializedVersion: 2
+    m_Bits: 1139
+  groundMat: {fileID: 2100000, guid: 73cdb34da9ef1ce45aceb7f9be138a1d, type: 2}
+  climbMat: {fileID: 2100000, guid: 0719bdd80901c0742b0c466ab1241b61, type: 2}
 --- !u!96 &6626131416219692495
 TrailRenderer:
   serializedVersion: 3

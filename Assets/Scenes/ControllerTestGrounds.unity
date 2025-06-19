@@ -76365,7 +76365,7 @@ GameObject:
   - component: {fileID: 1794419082}
   - component: {fileID: 1794419081}
   - component: {fileID: 1794419080}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: GROUND
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -112295,7 +112295,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1996056126353008822, guid: 22c1865e22b66084bbebfc93f3893adc, type: 3}
       propertyPath: maxSpeed
-      value: 6
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 1996056126353008822, guid: 22c1865e22b66084bbebfc93f3893adc, type: 3}
       propertyPath: jumpHeight
@@ -112303,7 +112303,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1996056126353008822, guid: 22c1865e22b66084bbebfc93f3893adc, type: 3}
       propertyPath: maxSnapSpeed
-      value: 7
+      value: 10.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1996056126353008822, guid: 22c1865e22b66084bbebfc93f3893adc, type: 3}
+      propertyPath: maxClimbSpeed
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 1996056126353008822, guid: 22c1865e22b66084bbebfc93f3893adc, type: 3}
       propertyPath: maxGroundAngle
@@ -112311,7 +112315,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1996056126353008822, guid: 22c1865e22b66084bbebfc93f3893adc, type: 3}
       propertyPath: maxAcceleration
-      value: 40
+      value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 1996056126353008822, guid: 22c1865e22b66084bbebfc93f3893adc, type: 3}
       propertyPath: playerInputSpace
@@ -112323,7 +112327,11 @@ PrefabInstance:
       objectReference: {fileID: 578329505}
     - target: {fileID: 1996056126353008822, guid: 22c1865e22b66084bbebfc93f3893adc, type: 3}
       propertyPath: maxAirAcceleration
-      value: 7
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 1996056126353008822, guid: 22c1865e22b66084bbebfc93f3893adc, type: 3}
+      propertyPath: maxClimbAcceleration
+      value: 70
       objectReference: {fileID: 0}
     - target: {fileID: 8218841183602866181, guid: 22c1865e22b66084bbebfc93f3893adc, type: 3}
       propertyPath: m_Name
