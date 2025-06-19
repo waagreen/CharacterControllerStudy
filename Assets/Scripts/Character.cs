@@ -38,11 +38,14 @@ public class Character : MonoBehaviour
     private int stepsSinceLastGrounded, stepsSinceLastJumped = 0;
     private float minGroundDotProduct, minStairDotProduct, minClimbDotProduct = 0f;
     private int jumpPhase = 0;
-    private bool desiredJump = false;
+    private bool desiresJump, desiresClimbing = false;
 
     private bool Grounded => groundContactCount > 0;
     private bool OnSteep => steepContactCount > 0;
-    private bool Climbing => climbContactCount > 0;
+    private bool Climbing => climbContactCount > 0 && (stepsSinceLastJumped > 2); // Checking steps prevents awkward interaction between climbing and wall jumping
+
+    private const int kJumpBufferSteps = 30;
+    private const float kGripForceReduction = 0.9f;
 
     float GetMinDot(int layer)
     {
@@ -123,7 +126,7 @@ public class Character : MonoBehaviour
                     }
                 }
                 // Also check for climbable surfaces
-                if ((upDot >= minClimbDotProduct) && (((1 << layer) & climbMask) != 0))
+                if (desiresClimbing && (upDot >= minClimbDotProduct) && (((1 << layer) & climbMask) != 0))
                 {
                     climbContactCount++;
                     climbNormal += normal;
@@ -154,8 +157,9 @@ public class Character : MonoBehaviour
         }
         else
         {
-            speed = maxSpeed;
+            speed = (Grounded && desiresClimbing) ? maxClimbSpeed : maxSpeed;
             acceleration = Grounded ? maxAcceleration : maxAirAcceleration;
+           
             xAxis = ProjectOnPlane(rightAxis, contactNormal);
             zAxis = ProjectOnPlane(forwardAxis, contactNormal);
         }
@@ -318,7 +322,8 @@ public class Character : MonoBehaviour
     private void Update()
     {
         ProjectAxis();
-        desiredJump |= input.Jump.WasPressedThisFrame();
+        desiresJump |= input.Jump.WasPressedThisFrame();
+        desiresClimbing = input.ClimbValue;
         rend.material = Climbing ? climbMat : groundMat;
     }
 
@@ -330,14 +335,27 @@ public class Character : MonoBehaviour
         UpdateState();
         AdjustVelocity();
 
-        if (desiredJump)
+        if (desiresJump)
         {
             bool performedJump = Jump(gravity);
             // Keep the desired to jump if the jump wasn't performed and the button press happend late
-            desiredJump = !performedJump && stepsSinceLastJumped > 50;
+            desiresJump = !performedJump && stepsSinceLastJumped > kJumpBufferSteps;
         }
 
-        if (!Climbing) velocity += gravity * Time.deltaTime;        
+        if (Climbing)
+        {
+            // Simulating grip by applying force contrary to surface normal
+            velocity -= Time.deltaTime * kGripForceReduction * maxClimbAcceleration * contactNormal;
+        }
+        else if (desiresClimbing && Grounded)
+        {
+            // Apply extra force to slow down movement when expressing the desire to climb
+            velocity += (gravity - contactNormal * (maxClimbAcceleration * kGripForceReduction)) * Time.deltaTime;
+        }
+        else
+        {
+            velocity += gravity * Time.deltaTime;
+        }
         rb.linearVelocity = velocity;
 
         ClearState();
