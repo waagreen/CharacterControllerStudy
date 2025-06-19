@@ -31,7 +31,7 @@ public class Character : MonoBehaviour
     // Runtime variables
     private Rigidbody connectedBody, previousConnectedBody;
     private Vector3 velocity, connectionVelocity = Vector3.zero;
-    private Vector3 contactNormal, steepNormal, climbNormal = Vector3.zero;
+    private Vector3 contactNormal, steepNormal, climbNormal, lastClimbNormal = Vector3.zero;
     private Vector3 upAxis, rightAxis, forwardAxis;
     private Vector3 connectionWorldPosition, connectionLocalPosition;
     private int groundContactCount, steepContactCount, climbContactCount = 0;
@@ -130,6 +130,7 @@ public class Character : MonoBehaviour
                 {
                     climbContactCount++;
                     climbNormal += normal;
+                    lastClimbNormal = normal;
                     connectedBody = collision.rigidbody;
                 }
             }
@@ -223,8 +224,17 @@ public class Character : MonoBehaviour
         // Assign to contact variables the climbing counterparts
         if (Climbing)
         {
+            // Climb normal it's an aggregate from steep contacts
+            if (climbContactCount > 1)
+            {
+                climbNormal.Normalize();
+                float upDot = Vector3.Dot(upAxis, climbNormal);
+                // If aggregate can be considered ground, climb the last contacted surface
+                if (upDot >= minGroundDotProduct) climbNormal = lastClimbNormal;
+            }
+
+            groundContactCount = 1;
             contactNormal = climbNormal;
-            groundContactCount = climbContactCount;
             return true;
         }
 
@@ -346,6 +356,11 @@ public class Character : MonoBehaviour
         {
             // Simulating grip by applying force contrary to surface normal
             velocity -= Time.deltaTime * kGripForceReduction * maxClimbAcceleration * contactNormal;
+        }
+        else if (Grounded && velocity.sqrMagnitude < 0.1f)
+        {
+            // Prevents sliding when the velocity is too low
+            velocity += contactNormal * (Vector3.Dot(gravity, contactNormal) * Time.deltaTime);
         }
         else if (desiresClimbing && Grounded)
         {
