@@ -145,8 +145,12 @@ MonoBehaviour:
   climbMask:
     serializedVersion: 2
     m_Bits: 1139
+  waterMask:
+    serializedVersion: 2
+    m_Bits: 16
   groundMat: {fileID: 2100000, guid: 73cdb34da9ef1ce45aceb7f9be138a1d, type: 2}
   climbMat: {fileID: 2100000, guid: 0719bdd80901c0742b0c466ab1241b61, type: 2}
+  swimmingMat: {fileID: 2100000, guid: 8ccb29c37e6411949857fc4dcd17fc87, type: 2}
 --- !u!96 &6626131416219692495
 TrailRenderer:
   serializedVersion: 3

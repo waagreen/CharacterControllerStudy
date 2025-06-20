@@ -200,7 +200,7 @@ public class OrbitCamera : MonoBehaviour
         Vector3 castDirection = castLine / castDistance;
 
         // Reposition if some geometry is detected between the camera's near plane and focal point
-        if (Physics.BoxCast(castFrom, cameraHalfExtends, castDirection, out RaycastHit hit, lookRotation, castDistance, obstructionMask))
+        if (Physics.BoxCast(castFrom, cameraHalfExtends, castDirection, out RaycastHit hit, lookRotation, castDistance, obstructionMask, QueryTriggerInteraction.Ignore))
         {
             rectPositon = castFrom + castDirection * hit.distance;
             lookPosition = rectPositon - rectOffset;

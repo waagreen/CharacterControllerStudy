@@ -17,11 +17,11 @@ public class Character : MonoBehaviour
 
     [Header("Raycast Settings")]
     [Min(0f)][SerializeField] private float probeDistance = 1f;
-    [SerializeField] private LayerMask probeMask, stairMask, climbMask = -1;
+    [SerializeField] private LayerMask probeMask = -1, stairMask = -1, climbMask = -1, waterMask = 0;
 
     [Header("Debug Visuals")]
-    [SerializeField] private Material groundMat;
-    [SerializeField] private Material climbMat;
+    [SerializeField] private bool displayDebugVisuals = true;
+    [SerializeField] private Material groundMat, climbMat, swimmingMat = default;
 
     // Assigned on awake (don't change)
     private InputManager input;
@@ -40,6 +40,7 @@ public class Character : MonoBehaviour
     private int jumpPhase = 0;
     private bool desiresJump, desiresClimbing = false;
 
+    private bool InWater { get; set; }
     private bool Grounded => groundContactCount > 0;
     private bool OnSteep => steepContactCount > 0;
     private bool Climbing => climbContactCount > 0 && (stepsSinceLastJumped > 2); // Checking steps prevents awkward interaction between climbing and wall jumping
@@ -58,7 +59,7 @@ public class Character : MonoBehaviour
         if (Grounded)
         {
             //Just standing on a normal surface
-            return contactNormal; 
+            return contactNormal;
         }
         else if (OnSteep)
         {
@@ -147,7 +148,7 @@ public class Character : MonoBehaviour
         Vector3 xAxis, zAxis;
         float speed, acceleration;
 
-        if (Climbing) 
+        if (Climbing)
         {
             speed = maxClimbSpeed;
             acceleration = maxClimbAcceleration;
@@ -160,7 +161,7 @@ public class Character : MonoBehaviour
         {
             speed = (Grounded && desiresClimbing) ? maxClimbSpeed : maxSpeed;
             acceleration = Grounded ? maxAcceleration : maxAirAcceleration;
-           
+
             xAxis = ProjectOnPlane(rightAxis, contactNormal);
             zAxis = ProjectOnPlane(forwardAxis, contactNormal);
         }
@@ -185,7 +186,7 @@ public class Character : MonoBehaviour
         if (speed > maxSnapSpeed) return false;
 
         // Try to get the ground plane directly below 
-        if (!Physics.Raycast(rb.position, -upAxis, out RaycastHit hit, probeDistance, probeMask)) return false;
+        if (!Physics.Raycast(rb.position, -upAxis, out RaycastHit hit, probeDistance, probeMask, QueryTriggerInteraction.Ignore)) return false;
 
         float upDot = Vector3.Dot(upAxis, hit.normal);
         if (upDot < GetMinDot(hit.collider.gameObject.layer)) return false;
@@ -290,6 +291,7 @@ public class Character : MonoBehaviour
         connectionVelocity = Vector3.zero;
         previousConnectedBody = connectedBody;
         connectedBody = null;
+        InWater = false;
     }
 
     private void ProjectAxis()
@@ -334,7 +336,12 @@ public class Character : MonoBehaviour
         ProjectAxis();
         desiresJump |= input.Jump.WasPressedThisFrame();
         desiresClimbing = input.ClimbValue;
-        rend.material = Climbing ? climbMat : groundMat;
+
+        if (displayDebugVisuals)
+        {
+            rend.material = Climbing ? climbMat : InWater ? swimmingMat : groundMat;
+        }
+        else rend.material = groundMat;
     }
 
     private void FixedUpdate()
@@ -384,5 +391,17 @@ public class Character : MonoBehaviour
     private void OnCollisionStay(Collision collision)
     {
         EvaluateCollision(collision);
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if ((waterMask & (1 << other.gameObject.layer)) == 0) return;
+        InWater = true;
+    }
+
+    private void OnTriggerStay(Collider other)
+    {
+        if ((waterMask & (1 << other.gameObject.layer)) == 0) return;
+        InWater = true;
     }
 }
