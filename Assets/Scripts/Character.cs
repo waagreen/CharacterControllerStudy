@@ -17,6 +17,8 @@ public class Character : MonoBehaviour
 
     [Header("Raycast Settings")]
     [Min(0f)][SerializeField] private float probeDistance = 1f;
+    [SerializeField] private float submergeOffset = 0.5f;
+    [Min(0.1f)][SerializeField] private float submergeRange = 1f;
     [SerializeField] private LayerMask probeMask = -1, stairMask = -1, climbMask = -1, waterMask = 0;
 
     [Header("Debug Visuals")]
@@ -37,10 +39,11 @@ public class Character : MonoBehaviour
     private int groundContactCount, steepContactCount, climbContactCount = 0;
     private int stepsSinceLastGrounded, stepsSinceLastJumped = 0;
     private float minGroundDotProduct, minStairDotProduct, minClimbDotProduct = 0f;
+    private float submergence;
     private int jumpPhase = 0;
     private bool desiresJump, desiresClimbing = false;
 
-    private bool InWater { get; set; }
+    private bool InWater => submergence > 0;
     private bool Grounded => groundContactCount > 0;
     private bool OnSteep => steepContactCount > 0;
     private bool Climbing => climbContactCount > 0 && (stepsSinceLastJumped > 2); // Checking steps prevents awkward interaction between climbing and wall jumping
@@ -96,6 +99,20 @@ public class Character : MonoBehaviour
 
         velocity += jumpDirection * jumpSpeed;
         return true;
+    }
+
+    private void EvaluateSubmergence()
+    {
+        // Adding 1 to the raycast distance to compensate for physics update while getting out the water
+        if (Physics.Raycast(rb.position + upAxis * submergeOffset, -upAxis, out RaycastHit hit, submergeRange + 1f, waterMask, QueryTriggerInteraction.Collide))
+        {
+            submergence = 1f - hit.distance / submergeRange;
+        }
+        else
+        {
+            // Raycast can't detect the trigger water volume while inside of it. So it's fully submerged.
+            submergence = 1f;
+        }
     }
 
     private void EvaluateCollision(Collision collision)
@@ -291,7 +308,7 @@ public class Character : MonoBehaviour
         connectionVelocity = Vector3.zero;
         previousConnectedBody = connectedBody;
         connectedBody = null;
-        InWater = false;
+        submergence = 0;
     }
 
     private void ProjectAxis()
@@ -396,12 +413,12 @@ public class Character : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         if ((waterMask & (1 << other.gameObject.layer)) == 0) return;
-        InWater = true;
+        EvaluateSubmergence();
     }
 
     private void OnTriggerStay(Collider other)
     {
         if ((waterMask & (1 << other.gameObject.layer)) == 0) return;
-        InWater = true;
+        EvaluateSubmergence();
     }
 }
