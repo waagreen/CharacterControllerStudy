@@ -10,6 +10,8 @@ public class Character : MonoBehaviour
     [Range(0f, 100f)][SerializeField] private float maxAcceleration = 20f, maxClimbAcceleration = 60f, maxAirAcceleration = 1f;
     [Range(0f, 90f)][SerializeField] private float maxGroundAngle = 25f, maxStairAngle = 46f;
     [Range(90f, 180f)][SerializeField] private float maxClimbAngle = 140f;
+    [Range(0f, 10f)][SerializeField] private float waterDrag = 1f;
+    [Min(0f)][SerializeField] private float buoyancy = 1f;
 
     [Header("Jump Settings")]
     [Range(1f, 10f)][SerializeField] private float jumpHeight = 2f;
@@ -197,7 +199,7 @@ public class Character : MonoBehaviour
     private bool SnapToGround()
     {
         // Only snaps if just leaved the ground without jumping or after two physics steps after jumping
-        if (stepsSinceLastGrounded > 1 || stepsSinceLastJumped <= 2) return false;
+        if (stepsSinceLastGrounded > 1 || stepsSinceLastJumped <= 2 || InWater) return false;
 
         float speed = velocity.magnitude;
         if (speed > maxSnapSpeed) return false;
@@ -217,6 +219,8 @@ public class Character : MonoBehaviour
         contactNormal = hit.normal;
         connectedBody = hit.rigidbody;
 
+        Debug.Log("Snapping to ground");
+        Debug.Log(hit.normal);
         return true;
     }
 
@@ -365,8 +369,14 @@ public class Character : MonoBehaviour
     {
         // Up axis is always defined as the opposite of the current gravity vector
         Vector3 gravity = CustomGravity.GetGravity(rb.position, out upAxis);
-
         UpdateState();
+
+        if (InWater)
+        {
+            // Water drag comes first so in extreme cases at least some amount of acceleration it's still possible
+            velocity *= 1f - waterDrag * submergence * Time.deltaTime;
+        }
+
         AdjustVelocity();
 
         if (desiresJump)
@@ -380,6 +390,10 @@ public class Character : MonoBehaviour
         {
             // Simulating grip by applying force contrary to surface normal
             velocity -= Time.deltaTime * kGripForceReduction * maxClimbAcceleration * contactNormal;
+        }
+        else if (InWater)
+        {
+            velocity += gravity * ((1f - buoyancy * submergence) * Time.deltaTime);
         }
         else if (Grounded && velocity.sqrMagnitude < 0.1f)
         {
@@ -395,6 +409,7 @@ public class Character : MonoBehaviour
         {
             velocity += gravity * Time.deltaTime;
         }
+
         rb.linearVelocity = velocity;
 
         ClearState();
