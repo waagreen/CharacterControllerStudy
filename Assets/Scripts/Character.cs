@@ -210,17 +210,15 @@ public class Character : MonoBehaviour
         float upDot = Vector3.Dot(upAxis, hit.normal);
         if (upDot < GetMinDot(hit.collider.gameObject.layer)) return false;
 
-        // Align current velocity with the new surface
-        float dot = Vector3.Dot(velocity, contactNormal);
-        if (dot > 0f) velocity = (velocity - contactNormal * dot).normalized * speed;
-
         // If all checks succeed, then we found a valid surface to snap
         groundContactCount = 1;
         contactNormal = hit.normal;
         connectedBody = hit.rigidbody;
 
-        Debug.Log("Snapping to ground");
-        Debug.Log(hit.normal);
+        // Align current velocity with the new surface
+        float dot = Vector3.Dot(velocity, contactNormal);
+        if (dot > 0f) velocity = (velocity - contactNormal * dot).normalized * speed;
+
         return true;
     }
 
