@@ -109,7 +109,7 @@ public class Character : MonoBehaviour
         return true;
     }
 
-    private void EvaluateSubmergence()
+    private void EvaluateSubmergence(Rigidbody waterBody)
     {
         // Adding 1 to the raycast distance to compensate for physics update while getting out the water
         if (Physics.Raycast(rb.position + upAxis * submergeOffset, -upAxis, out RaycastHit hit, submergeRange + 1f, waterMask, QueryTriggerInteraction.Collide))
@@ -121,10 +121,14 @@ public class Character : MonoBehaviour
             // Raycast can't detect the trigger water volume while inside of it. So it's fully submerged.
             submergence = 1f;
         }
+
+        if (Swimming) connectedBody = waterBody;
     }
 
     private void EvaluateCollision(Collision collision)
     {
+        if (Swimming) return; // We already dealing with a water volume, skip other kinds of collision detection
+
         int layer = collision.gameObject.layer;
         float minDot = GetMinDot(layer);
         for (int i = 0; i < collision.contactCount; i++)
@@ -470,12 +474,12 @@ public class Character : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         if ((waterMask & (1 << other.gameObject.layer)) == 0) return;
-        EvaluateSubmergence();
+        EvaluateSubmergence(other.attachedRigidbody);
     }
 
     private void OnTriggerStay(Collider other)
     {
         if ((waterMask & (1 << other.gameObject.layer)) == 0) return;
-        EvaluateSubmergence();
+        EvaluateSubmergence(other.attachedRigidbody);
     }
 }
