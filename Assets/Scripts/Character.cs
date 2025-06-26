@@ -6,12 +6,13 @@ public class Character : MonoBehaviour
 {
     [Header("Movement Settings")]
     [SerializeField] private Transform playerInputSpace;
-    [Range(0f, 100f)][SerializeField] private float maxSpeed = 10f, maxClimbSpeed = 5f, maxSnapSpeed = 11f;
-    [Range(0f, 100f)][SerializeField] private float maxAcceleration = 20f, maxClimbAcceleration = 60f, maxAirAcceleration = 1f;
+    [Range(0f, 100f)][SerializeField] private float maxSpeed = 10f, maxClimbSpeed = 5f, maxSnapSpeed = 11f, maxSwimSpeed = 5f;
+    [Range(0f, 100f)][SerializeField] private float maxAcceleration = 20f, maxClimbAcceleration = 60f, maxAirAcceleration = 1f, maxSwimAcceleration = 5f;
     [Range(0f, 90f)][SerializeField] private float maxGroundAngle = 25f, maxStairAngle = 46f;
     [Range(90f, 180f)][SerializeField] private float maxClimbAngle = 140f;
     [Range(0f, 10f)][SerializeField] private float waterDrag = 1f;
     [Min(0f)][SerializeField] private float buoyancy = 1f;
+    [Range(0.1f, 1f)][SerializeField] private float swimThreshold = 0.5f;
 
     [Header("Jump Settings")]
     [Range(1f, 10f)][SerializeField] private float jumpHeight = 2f;
@@ -45,12 +46,13 @@ public class Character : MonoBehaviour
     private int jumpPhase = 0;
     private bool desiresJump, desiresClimbing = false;
 
+    private bool Swimming => submergence >= swimThreshold;
     private bool InWater => submergence > 0;
     private bool Grounded => groundContactCount > 0;
     private bool OnSteep => steepContactCount > 0;
     private bool Climbing => climbContactCount > 0 && (stepsSinceLastJumped > 2); // Checking steps prevents awkward interaction between climbing and wall jumping
 
-    private const int kJumpBufferSteps = 30;
+    private const int kJumpBufferSteps = 50;
     private const float kGripForceReduction = 0.9f;
 
     float GetMinDot(int layer)
@@ -91,6 +93,10 @@ public class Character : MonoBehaviour
 
         // Jump speed overcoming gravity formula
         float jumpSpeed = Mathf.Sqrt(2f * gravity.magnitude * jumpHeight);
+        if (InWater)
+        {
+            jumpSpeed *= Mathf.Max(0f, 1f - submergence / swimThreshold);
+        }
 
         // Adding up axis vector to the direction so jumping on steep surfaces provides more vertical velocity
         jumpDirection = (jumpDirection + upAxis).normalized;
@@ -176,6 +182,16 @@ public class Character : MonoBehaviour
             xAxis = Vector3.Cross(contactNormal, Vector3.up);
             zAxis = Vector3.up;
         }
+        else if (InWater)
+        {
+            float swimFactor = Mathf.Min(1f, submergence / swimThreshold);
+
+            speed = Mathf.LerpUnclamped(maxSpeed, maxSwimSpeed, swimFactor);
+            acceleration = Mathf.LerpUnclamped(Grounded ? maxAcceleration : maxAirAcceleration, maxSwimAcceleration, swimFactor);
+
+            xAxis = ProjectOnPlane(rightAxis, contactNormal);
+            zAxis = ProjectOnPlane(forwardAxis, contactNormal);
+        }
         else
         {
             speed = (Grounded && desiresClimbing) ? maxClimbSpeed : maxSpeed;
@@ -194,12 +210,20 @@ public class Character : MonoBehaviour
         float newZ = Mathf.MoveTowards(currentZ, input.Movement.y * speed, maxSpeedChange);
 
         velocity += xAxis * (newX - currentX) + zAxis * (newZ - currentZ);
+
+        if (Swimming)
+        {
+            float currentY = Vector3.Dot(relativeVelocity, upAxis);
+            float newY = Mathf.MoveTowards(currentY, input.Dive * speed, maxSpeedChange);
+
+            velocity += upAxis * (newY - currentY);
+        }
     }
 
     private bool SnapToGround()
     {
         // Only snaps if just leaved the ground without jumping or after two physics steps after jumping
-        if (stepsSinceLastGrounded > 1 || stepsSinceLastJumped <= 2 || InWater) return false;
+        if (stepsSinceLastGrounded > 1 || stepsSinceLastJumped <= 2) return false;
 
         float speed = velocity.magnitude;
         if (speed > maxSnapSpeed) return false;
@@ -220,6 +244,18 @@ public class Character : MonoBehaviour
         if (dot > 0f) velocity = (velocity - contactNormal * dot).normalized * speed;
 
         return true;
+    }
+
+    private bool CheckSwimming()
+    {
+        if (Swimming)
+        {
+            groundContactCount = 0;
+            contactNormal = upAxis;
+            return true;
+        }
+
+        return false;
     }
 
     private bool CheckSteepContacts()
@@ -284,8 +320,8 @@ public class Character : MonoBehaviour
 
         stepsSinceLastGrounded++;
         stepsSinceLastJumped++;
-
-        if (CheckClimbing() || Grounded || SnapToGround() || CheckSteepContacts())
+        
+        if (CheckClimbing() || CheckSwimming() || Grounded || SnapToGround() || CheckSteepContacts())
         {
             stepsSinceLastGrounded = 0;
 
@@ -353,12 +389,20 @@ public class Character : MonoBehaviour
     private void Update()
     {
         ProjectAxis();
-        desiresJump |= input.Jump.WasPressedThisFrame();
-        desiresClimbing = input.ClimbValue;
+
+        if (Swimming)
+        {
+            desiresJump = false;
+        }
+        else
+        {
+            desiresJump |= input.Jump.WasPressedThisFrame();
+            desiresClimbing = input.ClimbValue;
+        }
 
         if (displayDebugVisuals)
         {
-            rend.material = Climbing ? climbMat : InWater ? swimmingMat : groundMat;
+            rend.material = Climbing ? climbMat : Swimming ? swimmingMat : groundMat;
         }
         else rend.material = groundMat;
     }
@@ -371,7 +415,7 @@ public class Character : MonoBehaviour
 
         if (InWater)
         {
-            // Water drag comes first so in extreme cases at least some amount of acceleration it's still possible
+            // Water drag comes first so in extreme cases at least some amount of acceleration is still possible
             velocity *= 1f - waterDrag * submergence * Time.deltaTime;
         }
 
