@@ -69,7 +69,7 @@ public class CustomGravityRigidbody : MonoBehaviour
     private void EvaluateSubmergence()
     {
         Vector3 upAxis = -gravity.normalized;
-        if (Physics.Raycast(rb.position + upAxis * submergeOffset, -upAxis, out RaycastHit hit, submergeRange + 1f, waterMask, QueryTriggerInteraction.Ignore))
+        if (Physics.Raycast(rb.position + upAxis * submergeOffset, -upAxis, out RaycastHit hit, submergeRange + 1f, waterMask, QueryTriggerInteraction.Collide))
         {
             submergence = 1f - hit.distance / submergeRange;
         }
