@@ -57,6 +57,11 @@ public class DetectionZone : MonoBehaviour
 
     private void OnDisable()
     {
+#if UNITY_EDITOR
+        // Preventing editor hot reloads from breaking this behaviour consistency
+        if (isActiveAndEnabled) return;
+#endif
+
         if (colliders.Count > 0)
         {
             colliders.Clear();
