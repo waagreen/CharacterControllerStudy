@@ -5,8 +5,8 @@ using UnityEngine.Events;
 [RequireComponent(typeof(Collider))]
 public class DetectionZone : MonoBehaviour
 {
+    [SerializeField] private LayerMask whiteList = 0;
     [SerializeField] private UnityEvent onFirstEnter = default, onLastExit = default;
-
     private List<Collider> colliders;
     private Collider col;
 
@@ -37,6 +37,8 @@ public class DetectionZone : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        if ((whiteList & (1 << other.gameObject.layer)) == 0) return;
+
         if (colliders.Count < 1)
         {
             enabled = true; // Zone is only active when something enters it
@@ -48,6 +50,8 @@ public class DetectionZone : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
+        if ((whiteList & (1 << other.gameObject.layer)) == 0) return;
+
         if (colliders.Remove(other) && colliders.Count < 1)
         {
             onLastExit.Invoke();

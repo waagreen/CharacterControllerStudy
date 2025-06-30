@@ -383,7 +383,7 @@ public class Character : MonoBehaviour
         minClimbDotProduct = Mathf.Cos(maxClimbAngle * Mathf.Deg2Rad);
     }
 
-    private void Awake()
+    private void Start()
     {
         rend = GetComponent<MeshRenderer>();
 
@@ -391,7 +391,6 @@ public class Character : MonoBehaviour
         rb.useGravity = false;
 
         input = FindFirstObjectByType<InputManager>();
-        input.CreateInputMap();
 
         OnValidate();
     }

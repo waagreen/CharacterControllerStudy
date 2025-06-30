@@ -8,20 +8,16 @@ public class InputManager : MonoBehaviour
 
     // Internal input variables
     private float diveValue = 0f;
-
     private Vector2 movementInput = Vector2.zero;
     private Vector2 cameraInput = Vector2.zero;
-
     private bool jumpValue = false;
     private bool climbValue = false;
 
     // Public accessible input variables
     public InputAction Jump => inputs.Player.Jump;
-
     public float Dive => diveValue;
     public Vector2 Movement => movementInput;
     public Vector2 Look => cameraInput;
-
     public bool JumpValue => jumpValue;
     public bool ClimbValue => climbValue;
 
@@ -77,6 +73,12 @@ public class InputManager : MonoBehaviour
         inputs.Player.Dive.canceled += UpdateDiveValue;
     }
 
+    private void Awake()
+    {
+        CreateInputMap();
+        Cursor.visible = false;
+    }
+
     private void OnDestroy()
     {
         inputs.Player.Look.performed -= UpdateCameraInput;
@@ -93,7 +95,7 @@ public class InputManager : MonoBehaviour
         inputs.Player.Climb.started -= UpdateClimbValue;
         inputs.Player.Climb.performed -= UpdateClimbValue;
         inputs.Player.Climb.canceled -= UpdateClimbValue;
-        
+
         inputs.Player.Dive.started += UpdateDiveValue;
         inputs.Player.Dive.performed += UpdateDiveValue;
         inputs.Player.Dive.canceled += UpdateDiveValue;
