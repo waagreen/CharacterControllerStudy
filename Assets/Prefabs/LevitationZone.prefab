@@ -13,6 +13,8 @@ GameObject:
   - component: {fileID: 8545665538631861439}
   - component: {fileID: 7372406040418767057}
   - component: {fileID: 2259193205962305000}
+  - component: {fileID: 5799760675054191465}
+  - component: {fileID: 8772426107908659544}
   m_Layer: 0
   m_Name: LevitationZone
   m_TagString: Untagged
@@ -66,7 +68,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 0aae125a7bb60f34181156d17bd733b2, type: 2}
+  - {fileID: 2100000, guid: 967383a7d9b1db64cabb0bfffbaadf83, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -121,4 +123,63 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 76d955cd66e44a443b88ae591f366380, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 12
+  speed: 3
+  acceleration: 90
+--- !u!114 &5799760675054191465
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7631308902163213978}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1013d54179ecf542a818efc7d816fc4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  materials:
+  - {fileID: 2100000, guid: 967383a7d9b1db64cabb0bfffbaadf83, type: 2}
+  - {fileID: 2100000, guid: 9fe9c45e6d5d44e4e8678b65efec4347, type: 2}
+  rend: {fileID: 8545665538631861439}
+--- !u!114 &8772426107908659544
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7631308902163213978}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc5d9a653d63fe142b6f25d5e03c5f52, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  onFirstEnter:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 5799760675054191465}
+        m_TargetAssemblyTypeName: MaterialSelector, Assembly-CSharp
+        m_MethodName: Select
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 1
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  onLastExit:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 5799760675054191465}
+        m_TargetAssemblyTypeName: MaterialSelector, Assembly-CSharp
+        m_MethodName: Select
+        m_Mode: 3
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
