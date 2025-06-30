@@ -250,6 +250,12 @@ public class Character : MonoBehaviour
         return true;
     }
 
+    public void PreventGroundSnaping()
+    {
+        // If snap could be performed this physics step, it won't.
+        stepsSinceLastJumped = -1;
+    }
+
     private bool CheckSwimming()
     {
         if (Swimming)
