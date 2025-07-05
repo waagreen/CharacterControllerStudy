@@ -206,22 +206,15 @@ public class Character : MonoBehaviour
         }
 
         Vector3 relativeVelocity = velocity - connectionVelocity;
-        float currentX = Vector3.Dot(relativeVelocity, xAxis);
-        float currentZ = Vector3.Dot(relativeVelocity, zAxis);
 
-        float maxSpeedChange = acceleration * Time.deltaTime;
-        float newX = Mathf.MoveTowards(currentX, input.Movement.x * speed, maxSpeedChange);
-        float newZ = Mathf.MoveTowards(currentZ, input.Movement.y * speed, maxSpeedChange);
+        Vector3 adjustment;
+        adjustment.x = input.Movement.x * speed - Vector3.Dot(relativeVelocity, xAxis);
+        adjustment.z = input.Movement.y * speed - Vector3.Dot(relativeVelocity, zAxis);
+        adjustment.y = Swimming ? (input.Dive * speed - Vector3.Dot(relativeVelocity, upAxis)) : 0f;
+        adjustment = Vector3.ClampMagnitude(adjustment, acceleration * Time.deltaTime);
 
-        velocity += xAxis * (newX - currentX) + zAxis * (newZ - currentZ);
-
-        if (Swimming)
-        {
-            float currentY = Vector3.Dot(relativeVelocity, upAxis);
-            float newY = Mathf.MoveTowards(currentY, input.Dive * speed, maxSpeedChange);
-
-            velocity += upAxis * (newY - currentY);
-        }
+        velocity += xAxis * adjustment.x + zAxis * adjustment.z;
+        if (Swimming) velocity += upAxis * adjustment.y;
     }
 
     private bool SnapToGround()
