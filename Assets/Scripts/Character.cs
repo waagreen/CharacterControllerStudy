@@ -4,6 +4,7 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 public class Character : MonoBehaviour
 {
+    [SerializeField] private Transform ball = default;
     [Header("Movement Settings")]
     [SerializeField] private Transform playerInputSpace;
     [Range(0f, 100f)][SerializeField] private float maxSpeed = 10f, maxClimbSpeed = 5f, maxSnapSpeed = 11f, maxSwimSpeed = 5f;
@@ -25,7 +26,8 @@ public class Character : MonoBehaviour
     [SerializeField] private LayerMask probeMask = -1, stairMask = -1, climbMask = -1, waterMask = 0;
 
     [Header("Debug Visuals")]
-    [SerializeField] private bool displayDebugVisuals = true;
+    [Min(0f)][SerializeField] private float ballRadius = 0.5f;
+    [Range(0f, 360f)][SerializeField] private float ballAlignSpeed = 180f;
     [SerializeField] private Material groundMat, climbMat, swimmingMat = default;
 
     // Assigned on awake (don't change)
@@ -36,7 +38,7 @@ public class Character : MonoBehaviour
     // Runtime variables
     private Rigidbody connectedBody, previousConnectedBody;
     private Vector3 velocity, connectionVelocity = Vector3.zero;
-    private Vector3 contactNormal, steepNormal, climbNormal, lastClimbNormal = Vector3.zero;
+    private Vector3 contactNormal, steepNormal, climbNormal, lastClimbNormal, lastContactNormal, lastSteepNormal;
     private Vector3 upAxis, rightAxis, forwardAxis;
     private Vector3 connectionWorldPosition, connectionLocalPosition;
     private int groundContactCount, steepContactCount, climbContactCount = 0;
@@ -344,11 +346,16 @@ public class Character : MonoBehaviour
 
     private void ClearState()
     {
+        lastContactNormal = contactNormal;
+        lastSteepNormal = steepNormal;
+
         groundContactCount = steepContactCount = climbContactCount = 0;
         contactNormal = steepNormal = climbNormal = Vector3.zero;
+
         connectionVelocity = Vector3.zero;
         previousConnectedBody = connectedBody;
         connectedBody = null;
+
         submergence = 0;
     }
 
@@ -367,6 +374,60 @@ public class Character : MonoBehaviour
         }
     }
 
+    private Quaternion AlignBallRotation(Vector3 rotationAxis, Quaternion rotation, float distance)
+    {
+        Vector3 ballAxis = ball.up;
+        float dot = Mathf.Clamp(Vector3.Dot(ballAxis, rotationAxis), -1f, 1f);
+        float angle = Mathf.Acos(dot) * Mathf.Rad2Deg;
+        float maxAngle = ballAlignSpeed * distance;
+
+        // Keep the same orientation when reversing
+        if (angle > 90f)
+        {
+            angle -= 90f;
+            rotationAxis *= -1f;
+        }
+
+        Quaternion newAlignment = Quaternion.FromToRotation(ballAxis, rotationAxis) * rotation;
+
+        if (angle <= maxAngle) return newAlignment;
+        else
+        {
+            return Quaternion.SlerpUnclamped(rotation, newAlignment, maxAngle / angle);
+        }
+    }
+
+    private void UpdateBallVisuals()
+    {
+        Vector3 rotationPlaneNormal = lastContactNormal;
+        Material ballMat = groundMat;
+
+        if (Climbing)
+        {
+            ballMat = climbMat;
+        }
+        else if (Swimming)
+        {
+            ballMat = swimmingMat;
+        }
+        else if (!Grounded)
+        {
+            if (OnSteep) rotationPlaneNormal = lastSteepNormal;
+        }
+        rend.material = ballMat;
+
+        Vector3 movement = rb.linearVelocity * Time.deltaTime;
+        float distance = movement.magnitude;
+        if (distance < 0.001f) return; // Ignore small changes so the ball won't move while standing still
+
+        float angle = distance * (180f / Mathf.PI) / ballRadius;
+        Vector3 rotationAxis = Vector3.Cross(rotationPlaneNormal, movement).normalized;
+        Quaternion rotation = Quaternion.Euler(rotationAxis * angle) * ball.localRotation;
+        if (ballAlignSpeed > 0f) rotation = AlignBallRotation(rotationAxis, rotation, distance);
+
+        ball.localRotation = rotation;
+    }
+
     private void OnValidate()
     {
         // Convert angles to radians and get their cosine to compare with normal vector
@@ -378,7 +439,7 @@ public class Character : MonoBehaviour
 
     private void Start()
     {
-        rend = GetComponent<MeshRenderer>();
+        rend = ball.GetComponent<MeshRenderer>();
 
         rb = GetComponent<Rigidbody>();
         rb.useGravity = false;
@@ -402,11 +463,7 @@ public class Character : MonoBehaviour
             desiresClimbing = input.ClimbValue;
         }
 
-        if (displayDebugVisuals)
-        {
-            rend.material = Climbing ? climbMat : Swimming ? swimmingMat : groundMat;
-        }
-        else rend.material = groundMat;
+        UpdateBallVisuals();
     }
 
     private void FixedUpdate()
