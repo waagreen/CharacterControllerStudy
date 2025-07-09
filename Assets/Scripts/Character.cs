@@ -378,7 +378,7 @@ public class Character : MonoBehaviour
 
     private void Start()
     {
-        rend = GetComponent<MeshRenderer>();
+        rend = GetComponentInChildren<MeshRenderer>();
 
         rb = GetComponent<Rigidbody>();
         rb.useGravity = false;
