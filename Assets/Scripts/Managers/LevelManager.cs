@@ -2,13 +2,15 @@ using UnityEngine;
 
 public class LevelManager : MonoBehaviour
 {
-    [SerializeField] private Character player;
-    [SerializeField] private Chaser chaser;
-    [SerializeField] private OrbitCamera mainCamera;
+    [SerializeField] private Character playerPrefab;
+    [SerializeField] private Chaser chaserPrefab;
+    [SerializeField] private OrbitCamera cameraPrefab;
     [SerializeField] private Transform playerSpawnPoint, chaserSpawnPoint, cameraSpawnPoint;
+    private InputManager input;
 
     private void Awake()
     {
+        input = gameObject.AddComponent<InputManager>();
         EventsManager.AddSubscriber<OnPlayerCaught>(EndGame);
     }
 
@@ -19,12 +21,13 @@ public class LevelManager : MonoBehaviour
 
     private void Start()
     {
-        Character p = Instantiate(player, playerSpawnPoint.position, Quaternion.identity);
-        Chaser c = Instantiate(chaser, chaserSpawnPoint.position, Quaternion.identity);
-        OrbitCamera cam = Instantiate(mainCamera, cameraSpawnPoint.position, cameraSpawnPoint.rotation);
+        Character player = Instantiate(playerPrefab, playerSpawnPoint.position, Quaternion.identity);
+        Chaser chaser = Instantiate(chaserPrefab, chaserSpawnPoint.position, Quaternion.identity);
+        OrbitCamera cam = Instantiate(cameraPrefab, cameraSpawnPoint.position, cameraSpawnPoint.rotation);
 
-        c.SetTarget(p.transform);
-        cam.SetFocus(p.transform);
+        chaser.SetTarget(player.transform);
+        cam.SetFocus(player.transform, input);
+        player.Setup(input, cam.transform);
     }
 
     private void EndGame(OnPlayerCaught evt)

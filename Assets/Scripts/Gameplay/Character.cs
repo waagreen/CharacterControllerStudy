@@ -5,7 +5,6 @@ using UnityEngine;
 public class Character : MovingBody
 {
     [Header("Movement Settings")]
-    [SerializeField] private Transform playerInputSpace;
     [Range(0f, 100f)][SerializeField] private float maxSpeed = 10f, maxClimbSpeed = 5f, maxSnapSpeed = 11f, maxSwimSpeed = 5f;
     [Range(0f, 100f)][SerializeField] private float maxAcceleration = 20f, maxClimbAcceleration = 60f, maxAirAcceleration = 1f, maxSwimAcceleration = 5f;
     [Range(0f, 90f)][SerializeField] private float maxGroundAngle = 25f, maxStairAngle = 46f;
@@ -29,8 +28,8 @@ public class Character : MovingBody
     [SerializeField] private Material groundMat, climbMat, swimmingMat = default;
 
     // Assigned on awake (don't change)
+    private Transform playerInputSpace;
     private InputManager input;
-    private Rigidbody rb;
     private MeshRenderer rend;
 
     // Runtime variables
@@ -376,22 +375,18 @@ public class Character : MovingBody
         minClimbDotProduct = Mathf.Cos(maxClimbAngle * Mathf.Deg2Rad);
     }
 
-    private void Start()
+    public void Setup(InputManager input, Transform playerInputSpace)
     {
+        this.input = input;
+        this.playerInputSpace = playerInputSpace;
+        
         rend = GetComponentInChildren<MeshRenderer>();
-
-        rb = GetComponent<Rigidbody>();
         rb.useGravity = false;
-
-        input = FindFirstObjectByType<InputManager>();
-
         OnValidate();
     }
 
     private void Update()
     {
-        if (!canMove) return;
-
         ProjectAxis();
 
         if (Swimming)
@@ -413,8 +408,6 @@ public class Character : MovingBody
 
     private void FixedUpdate()
     {
-        if (!canMove) return;
-
         // Up axis is always defined as the opposite of the current gravity vector
         Vector3 gravity = CustomGravity.GetGravity(rb.position, out upAxis);
         UpdateState();

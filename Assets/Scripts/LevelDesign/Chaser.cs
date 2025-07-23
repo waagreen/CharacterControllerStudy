@@ -4,51 +4,70 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 public class Chaser : MovingBody
 {
-    [Tooltip("Time in seconds that will be waited before the chase starts.")][SerializeField][Min(0f)] private float startCooldown = 5f;
+    [SerializeField][Min(0f)] private float startCooldown = 5f, timeToGetOnInitialPosition = 1f;
 
     private Transform target;
     private Rigidbody body;
-    private Vector3 previousPoint, nextPoint;
+    private Vector3 previousPoint, nextPoint, initialPoint;
     private Queue<Vector3> path;
-    private float startDelta;
+    private float timer, offPathDelta;
     private int pathBuffer;
-    private bool InterpolateMovement => startDelta >= startCooldown;
+    private bool alignedToPath = false;
+    private bool ShouldInterpolate => timer >= startCooldown;
     private const int capacityPerSecond = 60;
-
-    public Vector3 LastPoint => nextPoint;
 
     public void SetTarget(Transform target)
     {
         body = GetComponent<Rigidbody>();
         this.target = target;
 
-        pathBuffer = Mathf.Max(1, (int)(capacityPerSecond * startCooldown));
+        pathBuffer = Mathf.Max(1, (int)(capacityPerSecond * (startCooldown + timeToGetOnInitialPosition)));
         path = new(pathBuffer);
 
         previousPoint = body.position;
-        nextPoint = target.position;
+        initialPoint = nextPoint = target.position;
     }
 
-    private void HandlePath()
-    {
-        path.Enqueue(target.position);
-
-        if (!InterpolateMovement) return;
-
+    private void AdvancePath()
+    { 
         previousPoint = nextPoint;
         nextPoint = path.Dequeue();
     }
 
+    private void TryAlignToPath()
+    {
+        if (!alignedToPath)
+        {
+            previousPoint = initialPoint;
+            if (path.Count > 0) nextPoint = path.Dequeue();
+            else nextPoint = initialPoint;
+            alignedToPath = true;
+        }
+    }
+
     private void FixedUpdate()
     {
-        if (!canMove) return;
-        
+        // Increment path and timer
+        path.Enqueue(target.position);
         float deltaTime = Time.deltaTime;
+        timer += deltaTime;
 
-        if (!InterpolateMovement) startDelta += deltaTime;
+        // Starts moving only when timer value is greater than the inital cooldown
+        if (!ShouldInterpolate) return;
 
-        HandlePath();
+        bool goingToStartPosition = timer < (startCooldown + timeToGetOnInitialPosition);
 
-        body.MovePosition(Vector3.Lerp(previousPoint, nextPoint, deltaTime));
+        if (goingToStartPosition)
+        {
+            float t = deltaTime / timeToGetOnInitialPosition;
+            offPathDelta += t;
+            body.MovePosition(Vector3.Lerp(previousPoint, initialPoint, offPathDelta));
+        }
+        else
+        {
+            TryAlignToPath();
+            body.MovePosition(Vector3.Lerp(previousPoint, nextPoint, deltaTime));
+            AdvancePath();
+        }
     }
 }

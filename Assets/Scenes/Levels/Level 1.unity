@@ -308,9 +308,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4f1e9e51ca745424cb59781ac9d84a6e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerPrefab: {fileID: 0}
-  chaserPrefab: {fileID: 0}
-  cameraPrefab: {fileID: 0}
+  playerPrefab: {fileID: 1996056126353008822, guid: 22c1865e22b66084bbebfc93f3893adc, type: 3}
+  chaserPrefab: {fileID: 3180603486165135355, guid: c1f74bac0b8259e46955d0e71912f343, type: 3}
+  cameraPrefab: {fileID: 5684353752600152901, guid: 598fd9a37792a184dbe059e77a940fd6, type: 3}
   playerSpawnPoint: {fileID: 107572900}
   chaserSpawnPoint: {fileID: 2076945435}
   cameraSpawnPoint: {fileID: 1890946048}

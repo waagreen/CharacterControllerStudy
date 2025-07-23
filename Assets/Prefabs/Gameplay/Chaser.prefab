@@ -221,7 +221,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0996370ea4cfd5b468327e1fa2d1aa13, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startCooldown: 1
+  startCooldown: 2
+  timeToGetOnInitialPosition: 1
 --- !u!54 &4586941815563015883
 Rigidbody:
   m_ObjectHideFlags: 0

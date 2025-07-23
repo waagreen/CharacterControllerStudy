@@ -163,11 +163,11 @@ public class OrbitCamera : MonoBehaviour
         }
     }
 
-    public void SetFocus(Transform focus)
+    public void SetFocus(Transform focus, InputManager input)
     {
         this.focus = focus;
+        this.input = input;
 
-        input = FindFirstObjectByType<InputManager>();
         regularCamera = GetComponent<Camera>();
 
         focusPoint = focus.position;
